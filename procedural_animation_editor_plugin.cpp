@@ -2,6 +2,7 @@
 
 #include "editor/editor_scale.h"
 
+
 void ProceduralAnimationEditor::edit(const Ref<ProceduralAnimation> &animation) {
 	_animation = animation;
 }
@@ -10,6 +11,7 @@ void ProceduralAnimationEditor::add_frame_button_pressed() {
 	GraphNode *gn = memnew(GraphNode);
 	gn->set_title("Animation Frame");
 	gn->set_show_close_button(true);
+	//gn->set_position()
 
 	Label *l1 = memnew(Label);
 	l1->set_text("Name");
@@ -101,6 +103,17 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 	_graph_edit->set_v_size_flags(SIZE_EXPAND_FILL);
 	_graph_edit->set_custom_minimum_size(Size2(0, 200) * EDSCALE);
 	add_child(_graph_edit);
+
+	_start_node = memnew(GraphNode);
+	_start_node->set_title("Start");
+	_start_node->set_show_close_button(false);
+	_graph_edit->add_child(_start_node);
+
+	Label *slb = memnew(Label);
+	slb->set_text("Frame");
+	_start_node->add_child(slb);
+
+	_start_node->set_slot(0, false, 0, Color(0, 1, 0), true, 0, Color(0, 1, 0));
 }
 ProceduralAnimationEditor::~ProceduralAnimationEditor() {
 }

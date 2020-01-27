@@ -24,6 +24,10 @@ protected:
 	static void _bind_methods();
 
 private:
+	int _editor_category;
+	int _editor_category_animation;
+
+	GraphNode *_start_node;
 	Ref<ProceduralAnimation> _animation;
 	GraphEdit *_graph_edit;
 };
