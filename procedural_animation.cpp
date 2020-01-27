@@ -220,38 +220,138 @@ void ProceduralAnimation::remove_keyframe(const int category_index, const int an
 }
 
 String ProceduralAnimation::get_keyframe_name(const int category_index, const int animation_index, const int keyframe_index) {
-	return "";
+	ERR_FAIL_COND_V(!_categories.has(category_index), "");
+
+	Category *cat = _categories[category_index];
+
+	ERR_FAIL_COND_V(!cat->animations.has(animation_index), "");
+
+	AnimationEntry *ae = cat->animations[category_index];
+
+	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), "");
+
+	return ae->keyframes[keyframe_index]->name;
 }
 void ProceduralAnimation::set_keyframe_name(const int category_index, const int animation_index, const int keyframe_index, const String &value) {
+	ERR_FAIL_COND(!_categories.has(category_index));
 
+	Category *cat = _categories[category_index];
+
+	ERR_FAIL_COND(!cat->animations.has(animation_index));
+
+	AnimationEntry *ae = cat->animations[category_index];
+
+	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
+
+	ae->keyframes[keyframe_index]->name = value;
 }
 
 int ProceduralAnimation::get_keyframe_animation_keyframe_index(const int category_index, int animation_index, const int keyframe_index) const {
-	return 0;
+	ERR_FAIL_COND_V(!_categories.has(category_index), 0);
+
+	Category *cat = _categories[category_index];
+
+	ERR_FAIL_COND_V(!cat->animations.has(animation_index), 0);
+
+	AnimationEntry *ae = cat->animations[category_index];
+
+	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), 0);
+
+	return ae->keyframes[keyframe_index]->animation_keyframe_index;
 }
 void ProceduralAnimation::set_keyframe_animation_keyframe_index(const int category_index, int animation_index, const int keyframe_index, int value) {
+	ERR_FAIL_COND(!_categories.has(category_index));
 
+	Category *cat = _categories[category_index];
+
+	ERR_FAIL_COND(!cat->animations.has(animation_index));
+
+	AnimationEntry *ae = cat->animations[category_index];
+
+	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
+
+	ae->keyframes[keyframe_index]->animation_keyframe_index = value;
 }
 
 int ProceduralAnimation::get_keyframe_next_keyframe_index(const int category_index, const int animation_index, const int keyframe_index) const {
-	return 0;
+	ERR_FAIL_COND_V(!_categories.has(category_index), 0);
+
+	Category *cat = _categories[category_index];
+
+	ERR_FAIL_COND_V(!cat->animations.has(animation_index), 0);
+
+	AnimationEntry *ae = cat->animations[category_index];
+
+	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), 0);
+
+	return ae->keyframes[keyframe_index]->next_keyframe;
 }
 void ProceduralAnimation::set_keyframe_next_keyframe_index(const int category_index, const int animation_index, const int keyframe_index, const int value) {
+	ERR_FAIL_COND(!_categories.has(category_index));
 
+	Category *cat = _categories[category_index];
+
+	ERR_FAIL_COND(!cat->animations.has(animation_index));
+
+	AnimationEntry *ae = cat->animations[category_index];
+
+	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
+
+	ae->keyframes[keyframe_index]->next_keyframe = value;
 }
 
 Ref<Curve> ProceduralAnimation::get_keyframe_in_curve(const int category_index, const int animation_index, const int keyframe_index) const {
-	return Ref<Curve>();
+	ERR_FAIL_COND_V(!_categories.has(category_index), Ref<Curve>());
+
+	Category *cat = _categories[category_index];
+
+	ERR_FAIL_COND_V(!cat->animations.has(animation_index), Ref<Curve>());
+
+	AnimationEntry *ae = cat->animations[category_index];
+
+	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), Ref<Curve>());
+
+	return ae->keyframes[keyframe_index]->in_curve;
 }
 void ProceduralAnimation::set_keyframe_in_curve(const int category_index, const int animation_index, const int keyframe_index, const Ref<Curve> &value) {
+	ERR_FAIL_COND(!_categories.has(category_index));
 
+	Category *cat = _categories[category_index];
+
+	ERR_FAIL_COND(!cat->animations.has(animation_index));
+
+	AnimationEntry *ae = cat->animations[category_index];
+
+	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
+
+	ae->keyframes[keyframe_index]->in_curve = value;
 }
 
 Vector2 ProceduralAnimation::get_keyframe_node_position(const int category_index, int animation_index, const int keyframe_index) const {
-	return Vector2();
+	ERR_FAIL_COND_V(!_categories.has(category_index), Vector2());
+
+	Category *cat = _categories[category_index];
+
+	ERR_FAIL_COND_V(!cat->animations.has(animation_index), Vector2());
+
+	AnimationEntry *ae = cat->animations[category_index];
+
+	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), Vector2());
+
+	return ae->keyframes[keyframe_index]->position;
 }
 void ProceduralAnimation::set_keyframe_node_position(const int category_index, const int animation_index, const int keyframe_index, const Vector2 &value) {
+	ERR_FAIL_COND(!_categories.has(category_index));
 
+	Category *cat = _categories[category_index];
+
+	ERR_FAIL_COND(!cat->animations.has(animation_index));
+
+	AnimationEntry *ae = cat->animations[category_index];
+
+	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
+
+	ae->keyframes[keyframe_index]->position = value;
 }
 
 
@@ -461,29 +561,46 @@ void ProceduralAnimation::_get_property_list(List<PropertyInfo> *p_list) const {
 }
 
 void ProceduralAnimation::_bind_methods() {
-/*
-	ClassDB::bind_method(D_METHOD("get_editor_category"), &ProceduralAnimation::get_editor_category);
-	ClassDB::bind_method(D_METHOD("set_editor_category", "value"), &ProceduralAnimation::set_editor_category);
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "editor_category", PROPERTY_HINT_ENUM, "---", PROPERTY_USAGE_EDITOR / PROPERTY_USAGE_UPDATE_ALL_IF_MODIFIED), "set_editor_category", "get_editor_category");
 
-	ClassDB::bind_method(D_METHOD("get_editor_category_animation"), &ProceduralAnimation::get_editor_category_animation);
-	ClassDB::bind_method(D_METHOD("set_editor_category_animation", "value"), &ProceduralAnimation::set_editor_category_animation);
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "editor_category_animation", PROPERTY_HINT_ENUM, "---", PROPERTY_USAGE_EDITOR / PROPERTY_USAGE_UPDATE_ALL_IF_MODIFIED), "set_editor_category_animation", "get_editor_category_animation");
+	//Categories
+	ClassDB::bind_method(D_METHOD("get_category_indices"), &ProceduralAnimation::get_category_indices);
+	ClassDB::bind_method(D_METHOD("add_category", "name"), &ProceduralAnimation::add_category);
+	ClassDB::bind_method(D_METHOD("remove_category", "index"), &ProceduralAnimation::remove_category);
 
-	ClassDB::bind_method(D_METHOD("get_add_editor_category_name"), &ProceduralAnimation::get_add_editor_category_name);
-	ClassDB::bind_method(D_METHOD("set_add_editor_category_name", "value"), &ProceduralAnimation::set_add_editor_category_name);
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "add_editor_category_name"), "set_add_editor_category_name", "get_add_editor_category_name");
+	ClassDB::bind_method(D_METHOD("get_category_name", "category_index"), &ProceduralAnimation::get_category_name);
+	ClassDB::bind_method(D_METHOD("set_category_name", "category_index"), &ProceduralAnimation::set_category_name);
 
-	ClassDB::bind_method(D_METHOD("get_add_editor_category"), &ProceduralAnimation::get_add_editor_category);
-	ClassDB::bind_method(D_METHOD("set_add_editor_category", "value"), &ProceduralAnimation::set_add_editor_category);
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "add_editor_category", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR / PROPERTY_USAGE_UPDATE_ALL_IF_MODIFIED), "set_add_editor_category", "get_add_editor_category");
+	//Animations
+	ClassDB::bind_method(D_METHOD("get_animation_indices", "category_index"), &ProceduralAnimation::get_animation_indices);
+	ClassDB::bind_method(D_METHOD("add_animation", "category_index"), &ProceduralAnimation::add_animation);
+	ClassDB::bind_method(D_METHOD("remove_animation", "category_index", "animation_index"), &ProceduralAnimation::remove_animation);
 
-	ClassDB::bind_method(D_METHOD("get_add_editor_category_animation_name"), &ProceduralAnimation::get_add_editor_category_animation_name);
-	ClassDB::bind_method(D_METHOD("set_add_editor_category_animation_name", "value"), &ProceduralAnimation::set_add_editor_category_animation_name);
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "add_editor_category_animation_name"), "set_add_editor_category_animation_name", "get_add_editor_category_animation_name");
+	ClassDB::bind_method(D_METHOD("get_animation_name", "category_index", "animation_index"), &ProceduralAnimation::get_animation_name);
+	ClassDB::bind_method(D_METHOD("set_animation_name", "category_index", "animation_index", "value"), &ProceduralAnimation::set_animation_name);
 
-	ClassDB::bind_method(D_METHOD("get_add_editor_animation_category"), &ProceduralAnimation::get_add_editor_animation_category);
-	ClassDB::bind_method(D_METHOD("set_add_editor_animation_category", "value"), &ProceduralAnimation::set_add_editor_animation_category);
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "add_editor_animation_category", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR / PROPERTY_USAGE_UPDATE_ALL_IF_MODIFIED), "set_add_editor_animation_category", "get_add_editor_animation_category");
-*/
+	ClassDB::bind_method(D_METHOD("get_animation_node_position", "category_index", "animation_index"), &ProceduralAnimation::get_animation_node_position);
+	ClassDB::bind_method(D_METHOD("set_animation_node_position", "category_index", "animation_index", "value"), &ProceduralAnimation::set_animation_node_position);
+
+	ClassDB::bind_method(D_METHOD("get_start_frame_index", "category_index", "animation_index"), &ProceduralAnimation::get_start_frame_index);
+	ClassDB::bind_method(D_METHOD("set_start_frame_index", "category_index", "animation_index", "value"), &ProceduralAnimation::set_start_frame_index);
+
+	//Keyframes
+	ClassDB::bind_method(D_METHOD("get_keyframe_indices", "category_index", "animation_index"), &ProceduralAnimation::get_keyframe_indices);
+	ClassDB::bind_method(D_METHOD("add_keyframe", "category_index", "animation_index"), &ProceduralAnimation::add_keyframe);
+	ClassDB::bind_method(D_METHOD("remove_keyframe", "category_index", "animation_index", "keyframe_index"), &ProceduralAnimation::remove_keyframe);
+
+	ClassDB::bind_method(D_METHOD("get_keyframe_name", "category_index", "animation_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_name);
+	ClassDB::bind_method(D_METHOD("set_keyframe_name", "category_index", "animation_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_name);
+
+	ClassDB::bind_method(D_METHOD("get_keyframe_animation_keyframe_index", "category_index", "animation_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_animation_keyframe_index);
+	ClassDB::bind_method(D_METHOD("set_keyframe_animation_keyframe_index", "category_index", "animation_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_animation_keyframe_index);
+
+	ClassDB::bind_method(D_METHOD("get_keyframe_next_keyframe_index", "category_index", "animation_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_next_keyframe_index);
+	ClassDB::bind_method(D_METHOD("set_keyframe_next_keyframe_index", "category_index", "animation_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_next_keyframe_index);
+
+	ClassDB::bind_method(D_METHOD("get_keyframe_in_curve", "category_index", "animation_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_in_curve);
+	ClassDB::bind_method(D_METHOD("set_keyframe_in_curve", "category_index", "animation_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_in_curve);
+
+	ClassDB::bind_method(D_METHOD("get_keyframe_node_position", "category_index", "animation_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_node_position);
+	ClassDB::bind_method(D_METHOD("set_keyframe_node_position", "category_index", "animation_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_node_position);
 }

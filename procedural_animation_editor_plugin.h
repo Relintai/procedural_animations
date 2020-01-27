@@ -27,6 +27,10 @@ private:
 	int _editor_category;
 	int _editor_category_animation;
 
+	ConfirmationDialog *_name_popuop;
+	Label *_name_pupup_label;
+	LineEdit *_name_popup_line_edit;
+
 	GraphNode *_start_node;
 	Ref<ProceduralAnimation> _animation;
 	GraphEdit *_graph_edit;

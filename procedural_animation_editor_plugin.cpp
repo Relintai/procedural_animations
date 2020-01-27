@@ -114,11 +114,33 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 	_start_node->add_child(slb);
 
 	_start_node->set_slot(0, false, 0, Color(0, 1, 0), true, 0, Color(0, 1, 0));
+
+	Node *popups = memnew(Node);
+	add_child(popups);
+
+	//name popup
+	_name_popuop = memnew(ConfirmationDialog);
+	popups->add_child(_name_popuop);
+
+	VBoxContainer *name_popup_container = memnew(VBoxContainer);
+	_name_popuop->add_child(name_popup_container);
+
+	_name_pupup_label = memnew(Label);
+	_name_pupup_label->set_text("Enter name");
+	name_popup_container->add_child(_name_pupup_label);
+
+	_name_popup_line_edit = memnew(LineEdit);
+	name_popup_container->add_child(_name_popup_line_edit);
 }
 ProceduralAnimationEditor::~ProceduralAnimationEditor() {
 }
 
 void ProceduralAnimationEditorPlugin::edit(Object *p_object) {
+	if (Object::cast_to<ProceduralAnimation>(p_object)) {
+		animation_editor->edit(Object::cast_to<ProceduralAnimation>(p_object));
+		animation_editor_button->show();
+	} else
+		animation_editor_button->hide();
 }
 
 bool ProceduralAnimationEditorPlugin::handles(Object *p_object) const {
