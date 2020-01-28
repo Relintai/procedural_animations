@@ -22,6 +22,8 @@ void ProceduralAnimationEditor::load_selected_animation() {
 
 	_start_node->set_offset(_animation->get_animation_node_position(_selected_category, _selected_animation));
 
+	const PoolVector<String> &animation_names = _animation->get_animation_keyframe_names();
+
 	PoolVector<int> kfind = _animation->get_keyframe_indices(_selected_category, _selected_animation);
 
 	for (int i = 0; i < kfind.size(); ++i) {
@@ -29,6 +31,9 @@ void ProceduralAnimationEditor::load_selected_animation() {
 
 		ProceduralAnimationEditorGraphNode *gn = memnew(ProceduralAnimationEditorGraphNode);
 		_graph_edit->add_child(gn);
+
+		//gn->set_animation_keyframe_names(animation_names);
+		
 		gn->set_id(id);
 		gn->set_offset(_animation->get_keyframe_node_position(_selected_category, _selected_animation, id));
 		gn->set_keyframe_name(_animation->get_keyframe_name(_selected_category, _selected_animation, id));
@@ -275,7 +280,6 @@ void ProceduralAnimationEditor::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("on_animation_option_button_pressed", "index"), &ProceduralAnimationEditor::on_animation_option_button_pressed);
 
 	ClassDB::bind_method(D_METHOD("on_keyframe_node_changed", "node"), &ProceduralAnimationEditor::on_keyframe_node_changed);
-	
 }
 
 ProceduralAnimationEditor::ProceduralAnimationEditor() {
@@ -399,21 +403,25 @@ String ProceduralAnimationEditorGraphNode::get_keyframe_name() const {
 }
 void ProceduralAnimationEditorGraphNode::set_keyframe_name(const String &value) {
 	_name->set_text(value);
-	//emit_signal("graphnode_changed", this);
+	emit_signal("graphnode_changed", this);
 }
 void ProceduralAnimationEditorGraphNode::on_keyframe_name_modified(const String &value) {
 	emit_signal("graphnode_changed", this);
-}
-
-void ProceduralAnimationEditorGraphNode::set_animation_keyframe_str(const String &value) {
-	set_animation_keyframe_index(value.to_int());
 }
 
 int ProceduralAnimationEditorGraphNode::get_animation_keyframe_index() const {
 	return _animation_keyframe_index;
 }
 void ProceduralAnimationEditorGraphNode::set_animation_keyframe_index(const int value) {
+	if (_animation_keyframe_index == value)
+		return;
+
+	if (_animation_keyframe_spinbox->get_line_edit()->get_text().to_int() != value) {
+		_animation_keyframe_spinbox->get_line_edit()->set_text(String::num(value));
+	}
+
 	_animation_keyframe_index = value;
+	//_animation_keyframe_index_option_button->select(value);
 	emit_signal("graphnode_changed", this);
 }
 
@@ -429,15 +437,33 @@ Ref<Curve> ProceduralAnimationEditorGraphNode::get_in_curve() const {
 	return _in_curve;
 }
 void ProceduralAnimationEditorGraphNode::set_in_curve(const Ref<Curve> &value) {
+	if (_in_curve.is_valid()) {
+		_in_curve->disconnect(CoreStringNames::get_singleton()->changed, this, "changed");
+	}
+
 	_in_curve = value;
+	_curve_editor->set_curve(value);
+	_in_curve->connect(CoreStringNames::get_singleton()->changed, this, "changed");
 	emit_signal("graphnode_changed", this);
 }
 
-//void ProceduralAnimationEditorGraphNode::set_position(const Vector2 &value) {
-	//Control::set_position(value);
+void ProceduralAnimationEditorGraphNode::set_animation_keyframe_names(const PoolVector<String> &names) {
+	//_animation_keyframe_index_option_button->clear();
 
-	//emit_signal("graphnode_changed", this);
-//}
+	//for (int i = 0; i < names.size(); ++i) {
+	//	const String &s = names[i];
+
+	//	_animation_keyframe_index_option_button->add_item(s, s.get_slicec(' ', 0).to_int());
+	//}
+}
+
+void ProceduralAnimationEditorGraphNode::on_animation_keyframe_spinbox_value_changed(const String &value) {
+	set_animation_keyframe_index(value.to_int());
+}
+
+void ProceduralAnimationEditorGraphNode::changed() {
+	emit_signal("graphnode_changed", this);
+}
 
 ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 	_id = 0;
@@ -447,7 +473,6 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 
 	set_title("Animation Frame");
 	set_show_close_button(true);
-	//gn->set_position()
 
 	Label *l1 = memnew(Label);
 	l1->set_text("Name");
@@ -461,14 +486,19 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 	l2->set_text("Keyframe");
 	add_child(l2);
 
-	HBoxContainer *kfc = memnew(HBoxContainer);
-	add_child(kfc);
+	_animation_keyframe_spinbox = memnew(SpinBox);
+	_animation_keyframe_spinbox->set_max(999999999);
+	_animation_keyframe_spinbox->set_h_size_flags(SIZE_EXPAND_FILL);
+	_animation_keyframe_spinbox->get_line_edit()->connect("text_changed", this, "on_animation_keyframe_spinbox_value_changed");
+	add_child(_animation_keyframe_spinbox);
 
-	//OptionButton *kob = memnew(OptionButton);
-	SpinBox *kob = memnew(SpinBox);
-	kob->set_h_size_flags(SIZE_EXPAND_FILL);
-	kob->get_line_edit()->connect("text_entered", this, "set_animation_keyframe_str");
-	kfc->add_child(kob);
+	//HBoxContainer *kfc = memnew(HBoxContainer);
+	//add_child(kfc);
+
+	//_animation_keyframe_index_option_button = memnew(OptionButton);
+	//_animation_keyframe_index_option_button->set_h_size_flags(SIZE_EXPAND_FILL);
+	//_animation_keyframe_index_option_button->connect("item_selected", this, "set_animation_keyframe_index");
+	//kfc->add_child(_animation_keyframe_index_option_button);
 
 	//Button *kb = memnew(Button);
 	//kb->set_text("E");
@@ -478,11 +508,9 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 	l3->set_text("In Curve");
 	add_child(l3);
 
-	//placeholder
-	Button *pb = memnew(Button);
-	pb->set_text("Edit / Show");
-	pb->set_custom_minimum_size(Size2(0, 69) * EDSCALE);
-	add_child(pb);
+	_curve_editor = memnew(CurveEditor);
+	_curve_editor->set_custom_minimum_size(Size2(0, 69) * EDSCALE);
+	add_child(_curve_editor);
 
 	set_slot(0, true, 0, Color(0, 1, 0), true, 0, Color(0, 1, 0));
 }
@@ -491,11 +519,21 @@ ProceduralAnimationEditorGraphNode::~ProceduralAnimationEditorGraphNode() {
 	_in_curve.unref();
 }
 
+void ProceduralAnimationEditorGraphNode::_notification(int p_what) {
+	switch (p_what){
+		case NOTIFICATION_ENTER_TREE:
+			connect("offset_changed", this, "changed");
+			break;
+	}
+}
+
 void ProceduralAnimationEditorGraphNode::_bind_methods() {
 	ADD_SIGNAL(MethodInfo("graphnode_changed", PropertyInfo(Variant::OBJECT, "node", PROPERTY_HINT_RESOURCE_TYPE, "Node")));
 
-	ClassDB::bind_method(D_METHOD("set_animation_keyframe_str", "name"), &ProceduralAnimationEditorGraphNode::set_animation_keyframe_str);
 	ClassDB::bind_method(D_METHOD("on_keyframe_name_modified", "name"), &ProceduralAnimationEditorGraphNode::on_keyframe_name_modified);
+	ClassDB::bind_method(D_METHOD("changed"), &ProceduralAnimationEditorGraphNode::changed);
+	ClassDB::bind_method(D_METHOD("on_animation_keyframe_spinbox_value_changed", "value"), &ProceduralAnimationEditorGraphNode::on_animation_keyframe_spinbox_value_changed);
+
 }
 
 void ProceduralAnimationEditorPlugin::edit(Object *p_object) {

@@ -5,6 +5,7 @@
 
 #include "core/map.h"
 #include "core/vector.h"
+#include "core/pool_vector.h"
 #include "core/math/vector2.h"
 #include "scene/resources/animation.h"
 #include "scene/resources/curve.h"
@@ -15,6 +16,14 @@ class ProceduralAnimation : public Resource {
 	GDCLASS(ProceduralAnimation, Resource);
 
 public:
+	Ref<Animation> get_animation() const;
+	void set_animation(const Ref<Animation> &value);
+
+	String get_animation_keyframe_name(int keyframe_index) const;
+	void set_animation_keyframe_name(int keyframe_index, const String &value);
+	void remove_animation_keyframe_name(int keyframe_index);
+	PoolVector<String> get_animation_keyframe_names() const;
+
 	//Categories
 	PoolVector<int> get_category_indices() const;
 	int add_category(const String &name);
@@ -77,6 +86,7 @@ protected:
 		AnimationKeyFrame() {
 			animation_keyframe_index = 0;
 			next_keyframe = -1;
+			in_curve.instance();
 		}
 
 		~AnimationKeyFrame() {

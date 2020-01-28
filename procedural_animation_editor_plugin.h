@@ -8,6 +8,9 @@
 #include "scene/gui/menu_button.h"
 
 #include "procedural_animation.h"
+#include "core/core_string_names.h"
+
+#include "editor/plugins/curve_editor_plugin.h"
 
 class ProceduralAnimationEditor : public VBoxContainer {
 	GDCLASS(ProceduralAnimationEditor, VBoxContainer);
@@ -83,7 +86,6 @@ public:
 	void set_keyframe_name(const String &value);
 	void on_keyframe_name_modified(const String &value);
 
-	void set_animation_keyframe_str(const String &value);
 	int get_animation_keyframe_index() const;
 	void set_animation_keyframe_index(const int value);
 
@@ -93,20 +95,26 @@ public:
 	Ref<Curve> get_in_curve() const;
 	void set_in_curve(const Ref<Curve> &value);
 
-	//Vector2 get_position() const;
-	//void set_position(const Vector2 &value);
+	void set_animation_keyframe_names(const PoolVector<String> &names);
 
+	void on_animation_keyframe_spinbox_value_changed(const String &value);
+	void changed();
+	
 	ProceduralAnimationEditorGraphNode();
 	~ProceduralAnimationEditorGraphNode();
 
 protected:
+	void _notification(int p_what);
 	static void _bind_methods();
 
 private:
 	int _id;
 	LineEdit *_name;
+	//OptionButton *_animation_keyframe_index_option_button;
+	SpinBox *_animation_keyframe_spinbox;
 	int _animation_keyframe_index;
 	int _next_keyframe;
+	CurveEditor *_curve_editor;
 	Ref<Curve> _in_curve;
 };
 
@@ -116,7 +124,7 @@ class ProceduralAnimationEditorPlugin : public EditorPlugin {
 public:
 	virtual String get_name() const { return "ProceduralAnimation"; }
 	bool has_main_screen() const { return false; }
-	virtual void edit(Object *p_object);
+	virtual void edit(Object *p_object); 
 	virtual bool handles(Object *p_object) const;
 	virtual void make_visible(bool p_visible);
 

@@ -1,5 +1,43 @@
 #include "procedural_animation.h"
 
+Ref<Animation> ProceduralAnimation::get_animation() const {
+	return _animation;
+}
+void ProceduralAnimation::set_animation(const Ref<Animation> &value) {
+	_animation = value;
+}
+
+String ProceduralAnimation::get_animation_keyframe_name(int keyframe_index) const {
+	if (!_keyframe_names.has(keyframe_index)) {
+		return String::num(keyframe_index);
+	}
+
+	return String::num(keyframe_index) + " " + _keyframe_names[keyframe_index];
+}
+void ProceduralAnimation::set_animation_keyframe_name(int keyframe_index, const String &value) {
+	_keyframe_names[keyframe_index] = value;
+}
+void ProceduralAnimation::remove_animation_keyframe_name(int keyframe_index) {
+	if (!_keyframe_names.has(keyframe_index)) {
+		return;
+	}
+
+	_keyframe_names.erase(keyframe_index);
+}
+PoolVector<String> ProceduralAnimation::get_animation_keyframe_names() const {
+	PoolVector<String> names;
+
+	names.resize(_keyframe_names.size());
+
+	int i = 0;
+	for (Map<int, String>::Element *E = _keyframe_names.front(); E; E = E->next()) {
+		names.set(i, String::num(E->key()) + " " + _keyframe_names[E->key()]);
+		++i;
+	}
+	
+	return names;
+}
+
 //Categories
 PoolVector<int> ProceduralAnimation::get_category_indices() const {
 	PoolVector<int> idxr;
@@ -562,6 +600,14 @@ void ProceduralAnimation::_get_property_list(List<PropertyInfo> *p_list) const {
 }
 
 void ProceduralAnimation::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("get_animation"), &ProceduralAnimation::get_animation);
+	ClassDB::bind_method(D_METHOD("set_animation", "value"), &ProceduralAnimation::set_animation);
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "animation", PROPERTY_HINT_RESOURCE_TYPE, "Animation"), "set_animation", "get_animation");
+
+	ClassDB::bind_method(D_METHOD("get_animation_keyframe_name", "keyframe_index"), &ProceduralAnimation::get_animation_keyframe_name);
+	ClassDB::bind_method(D_METHOD("set_animation_keyframe_name", "keyframe_index", "value"), &ProceduralAnimation::set_animation_keyframe_name);
+	ClassDB::bind_method(D_METHOD("remove_animation_keyframe_name", "keyframe_index"), &ProceduralAnimation::remove_animation_keyframe_name);
+	ClassDB::bind_method(D_METHOD("get_animation_keyframe_names"), &ProceduralAnimation::get_animation_keyframe_names);
 
 	//Categories
 	ClassDB::bind_method(D_METHOD("get_category_indices"), &ProceduralAnimation::get_category_indices);
