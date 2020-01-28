@@ -165,7 +165,7 @@ PoolVector<int> ProceduralAnimation::get_keyframe_indices(const int category_ind
 
 	ERR_FAIL_COND_V(!cat->animations.has(animation_index), PoolVector<int>());
 
-	AnimationEntry *ae = cat->animations[category_index];
+	AnimationEntry *ae = cat->animations[animation_index];
 
 	PoolVector<int> idxr;
 	idxr.resize(ae->keyframes.size());
@@ -185,7 +185,7 @@ int ProceduralAnimation::add_keyframe(const int category_index, const int animat
 
 	ERR_FAIL_COND_V(!cat->animations.has(animation_index), 0);
 
-	AnimationEntry *ae = cat->animations[category_index];
+	AnimationEntry *ae = cat->animations[animation_index];
 
 	int key = -1;
 	for (Map<int, AnimationKeyFrame *>::Element *E = ae->keyframes.front(); E; E = E->next()) {
@@ -208,7 +208,7 @@ void ProceduralAnimation::remove_keyframe(const int category_index, const int an
 
 	ERR_FAIL_COND(!cat->animations.has(animation_index));
 
-	AnimationEntry *ae = cat->animations[category_index];
+	AnimationEntry *ae = cat->animations[animation_index];
 
 	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
 
@@ -226,7 +226,7 @@ String ProceduralAnimation::get_keyframe_name(const int category_index, const in
 
 	ERR_FAIL_COND_V(!cat->animations.has(animation_index), "");
 
-	AnimationEntry *ae = cat->animations[category_index];
+	AnimationEntry *ae = cat->animations[animation_index];
 
 	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), "");
 
@@ -239,7 +239,7 @@ void ProceduralAnimation::set_keyframe_name(const int category_index, const int 
 
 	ERR_FAIL_COND(!cat->animations.has(animation_index));
 
-	AnimationEntry *ae = cat->animations[category_index];
+	AnimationEntry *ae = cat->animations[animation_index];
 
 	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
 
@@ -253,7 +253,7 @@ int ProceduralAnimation::get_keyframe_animation_keyframe_index(const int categor
 
 	ERR_FAIL_COND_V(!cat->animations.has(animation_index), 0);
 
-	AnimationEntry *ae = cat->animations[category_index];
+	AnimationEntry *ae = cat->animations[animation_index];
 
 	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), 0);
 
@@ -266,7 +266,7 @@ void ProceduralAnimation::set_keyframe_animation_keyframe_index(const int catego
 
 	ERR_FAIL_COND(!cat->animations.has(animation_index));
 
-	AnimationEntry *ae = cat->animations[category_index];
+	AnimationEntry *ae = cat->animations[animation_index];
 
 	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
 
@@ -280,7 +280,7 @@ int ProceduralAnimation::get_keyframe_next_keyframe_index(const int category_ind
 
 	ERR_FAIL_COND_V(!cat->animations.has(animation_index), 0);
 
-	AnimationEntry *ae = cat->animations[category_index];
+	AnimationEntry *ae = cat->animations[animation_index];
 
 	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), 0);
 
@@ -293,7 +293,7 @@ void ProceduralAnimation::set_keyframe_next_keyframe_index(const int category_in
 
 	ERR_FAIL_COND(!cat->animations.has(animation_index));
 
-	AnimationEntry *ae = cat->animations[category_index];
+	AnimationEntry *ae = cat->animations[animation_index];
 
 	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
 
@@ -307,7 +307,7 @@ Ref<Curve> ProceduralAnimation::get_keyframe_in_curve(const int category_index, 
 
 	ERR_FAIL_COND_V(!cat->animations.has(animation_index), Ref<Curve>());
 
-	AnimationEntry *ae = cat->animations[category_index];
+	AnimationEntry *ae = cat->animations[animation_index];
 
 	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), Ref<Curve>());
 
@@ -320,7 +320,7 @@ void ProceduralAnimation::set_keyframe_in_curve(const int category_index, const 
 
 	ERR_FAIL_COND(!cat->animations.has(animation_index));
 
-	AnimationEntry *ae = cat->animations[category_index];
+	AnimationEntry *ae = cat->animations[animation_index];
 
 	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
 
@@ -334,7 +334,7 @@ Vector2 ProceduralAnimation::get_keyframe_node_position(const int category_index
 
 	ERR_FAIL_COND_V(!cat->animations.has(animation_index), Vector2());
 
-	AnimationEntry *ae = cat->animations[category_index];
+	AnimationEntry *ae = cat->animations[animation_index];
 
 	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), Vector2());
 
@@ -347,7 +347,7 @@ void ProceduralAnimation::set_keyframe_node_position(const int category_index, c
 
 	ERR_FAIL_COND(!cat->animations.has(animation_index));
 
-	AnimationEntry *ae = cat->animations[category_index];
+	AnimationEntry *ae = cat->animations[animation_index];
 
 	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
 
@@ -392,7 +392,7 @@ bool ProceduralAnimation::_set(const StringName &p_name, const Variant &p_value)
 			int animation_index = name.get_slicec('/', 3).to_int();
 			String anim_prop_name = name.get_slicec('/', 4);
 
-			if (!cat->animations.has(category_index)) {
+			if (!cat->animations.has(animation_index)) {
 				AnimationEntry *ae = memnew(AnimationEntry);
 
 				cat->animations[animation_index] = ae;
@@ -416,7 +416,7 @@ bool ProceduralAnimation::_set(const StringName &p_name, const Variant &p_value)
 				int keyframe_index = name.get_slicec('/', 5).to_int();
 				String keyframe_name = name.get_slicec('/', 6);
 
-				if (!ae->keyframes.has(category_index)) {
+				if (!ae->keyframes.has(keyframe_index)) {
 					AnimationKeyFrame *keyframe = memnew(AnimationKeyFrame);
 
 					ae->keyframes[keyframe_index] = keyframe;
@@ -533,7 +533,8 @@ bool ProceduralAnimation::_get(const StringName &p_name, Variant &r_ret) const {
 }
 
 void ProceduralAnimation::_get_property_list(List<PropertyInfo> *p_list) const {
-	int property_usange = PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_INTERNAL;
+	//int property_usange = PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_INTERNAL;
+	int property_usange = PROPERTY_USAGE_DEFAULT;
 
 	for (Map<int, Category *>::Element *E = _categories.front(); E; E = E->next()) {
 		Category *category = E->get();

@@ -2,59 +2,294 @@
 
 #include "editor/editor_scale.h"
 
-
 void ProceduralAnimationEditor::edit(const Ref<ProceduralAnimation> &animation) {
 	_animation = animation;
+
+	_selected_category = -1;
+	_selected_animation = -1;
+
+	clear_keyframe_nodes();
+	refresh_option_buttons();
+}
+
+void ProceduralAnimationEditor::load_selected_animation() {
+	clear_keyframe_nodes();
+
+	ERR_FAIL_COND(!_animation.is_valid());
+
+	if (_selected_category == -1 || _selected_animation == -1)
+		return;
+
+	_start_node->set_offset(_animation->get_animation_node_position(_selected_category, _selected_animation));
+
+	PoolVector<int> kfind = _animation->get_keyframe_indices(_selected_category, _selected_animation);
+
+	for (int i = 0; i < kfind.size(); ++i) {
+		int id = kfind[i];
+
+		ProceduralAnimationEditorGraphNode *gn = memnew(ProceduralAnimationEditorGraphNode);
+		_graph_edit->add_child(gn);
+		gn->set_id(id);
+		gn->set_offset(_animation->get_keyframe_node_position(_selected_category, _selected_animation, id));
+		gn->set_keyframe_name(_animation->get_keyframe_name(_selected_category, _selected_animation, id));
+		gn->set_next_keyframe(_animation->get_keyframe_next_keyframe_index(_selected_category, _selected_animation, id));
+		gn->set_in_curve(_animation->get_keyframe_in_curve(_selected_category, _selected_animation, id));
+		gn->set_animation_keyframe_index(_animation->get_keyframe_animation_keyframe_index(_selected_category, _selected_animation, id));
+		gn->connect("graphnode_changed", this, "on_keyframe_node_changed");
+	}
+}
+
+void ProceduralAnimationEditor::clear_keyframe_nodes() {
+	for (int i = 0; i < _graph_edit->get_child_count(); ++i) {
+		Node *n = _graph_edit->get_child(i);
+
+		ProceduralAnimationEditorGraphNode *gn = Object::cast_to<ProceduralAnimationEditorGraphNode>(n);
+
+		if (!ObjectDB::instance_validate(gn)) {
+			continue;
+		}
+
+		gn->disconnect("graphnode_changed", this, "on_keyframe_node_changed");
+		gn->queue_delete();
+	}
+}
+
+void ProceduralAnimationEditor::on_animation_option_button_pressed(int indx) {
+	if (_selected_category == -1)
+		return;
+
+	if (_selected_animation == indx)
+		return;
+
+	_selected_animation = indx;
+
+	load_selected_animation();
+}
+
+void ProceduralAnimationEditor::on_category_option_button_pressed(int indx) {
+	if (_selected_category == indx)
+		return;
+
+	_selected_category = indx;
+	_selected_animation = -1;
+
+	refresh_animation_option_button();
+}
+
+void ProceduralAnimationEditor::refresh_option_buttons() {
+	_category_option_button->clear();
+	_animation_option_button->clear();
+
+	if (!_animation.is_valid())
+		return;
+
+	PoolVector<int> cind = _animation->get_category_indices();
+
+	for (int i = 0; i < cind.size(); ++i) {
+		int indx = cind[i];
+
+		if (_selected_category == -1)
+			_selected_category = indx;
+
+		_category_option_button->add_item(_animation->get_category_name(indx), indx);
+	}
+
+	if (_selected_category == -1)
+		return;
+
+	_category_option_button->select(_selected_category);
+
+	PoolVector<int> aind = _animation->get_animation_indices(_selected_category);
+
+	for (int i = 0; i < aind.size(); ++i) {
+		int indx = aind[i];
+
+		if (_selected_animation == -1)
+			_selected_animation = indx;
+
+		_animation_option_button->add_item(_animation->get_animation_name(_selected_category, indx), indx);
+	}
+
+	if (_selected_animation == -1)
+		return;
+
+	_animation_option_button->select(_selected_animation);
+}
+
+void ProceduralAnimationEditor::refresh_animation_option_button() {
+	_animation_option_button->clear();
+	_selected_animation = -1;
+
+	if (!_animation.is_valid())
+		return;
+
+	if (_selected_category == -1)
+		return;
+
+	PoolVector<int> aind = _animation->get_animation_indices(_selected_category);
+
+	for (int i = 0; i < aind.size(); ++i) {
+		int indx = aind[i];
+
+		if (_selected_animation == -1)
+			_selected_animation = indx;
+
+		_animation_option_button->add_item(_animation->get_animation_name(_selected_category, indx), indx);
+	}
+
+	if (_selected_animation == -1)
+		return;
+
+	_animation_option_button->select(_selected_animation);
+}
+
+void ProceduralAnimationEditor::on_keyframe_node_changed(Node *node) {
+	ProceduralAnimationEditorGraphNode *gn = Object::cast_to<ProceduralAnimationEditorGraphNode>(node);
+
+	ERR_FAIL_COND(!ObjectDB::instance_validate(gn));
+	ERR_FAIL_COND(!_animation.is_valid());
+	ERR_FAIL_COND(_selected_category == -1);
+	ERR_FAIL_COND(_selected_animation == -1);
+
+	int id = gn->get_id();
+
+	_animation->set_keyframe_animation_keyframe_index(_selected_category, _selected_animation, id, gn->get_animation_keyframe_index());
+	_animation->set_keyframe_in_curve(_selected_category, _selected_animation, id, gn->get_in_curve());
+	_animation->set_keyframe_name(_selected_category, _selected_animation, id, gn->get_keyframe_name());
+	_animation->set_keyframe_next_keyframe_index(_selected_category, _selected_animation, id, gn->get_next_keyframe());
+	_animation->set_keyframe_node_position(_selected_category, _selected_animation, id, gn->get_offset());
+}
+
+void ProceduralAnimationEditor::category_tool_button_id_pressed(int id) {
+	switch (id) {
+		case 0:
+			show_name_popup(NAME_POPUP_ADD_CATEGORY_NAME);
+			break;
+		case 1:
+			show_name_popup(NAME_POPUP_EDIT_CATEGORY_NAME);
+			break;
+		case 2:
+			_delete_popup_action = DELETE_POPUP_CATEGORY;
+			_delete_popuop->popup_centered();
+			break;
+	}
+}
+void ProceduralAnimationEditor::animation_tool_button_id_pressed(int id) {
+	switch (id) {
+		case 0:
+			show_name_popup(NAME_POPUP_ADD_ANIMATION_NAME);
+			break;
+		case 1:
+			show_name_popup(NAME_POPUP_EDIT_ANIMATION_NAME);
+			break;
+		case 2:
+			_delete_popup_action = DELETE_POPUP_ANIMATION;
+			_delete_popuop->popup_centered();
+			break;
+	}
+}
+void ProceduralAnimationEditor::show_name_popup(NamePopupActions action) {
+	_name_popup_action = action;
+	_name_popup_line_edit->set_text("");
+	_name_popuop->popup_centered();
+	_name_popup_line_edit->grab_focus();
+}
+
+void ProceduralAnimationEditor::on_name_popup_confirmed() {
+	switch(_name_popup_action) {
+		case NAME_POPUP_ADD_CATEGORY_NAME:
+			_selected_category = _animation->add_category(_name_popup_line_edit->get_text());
+
+			_selected_animation = -1;
+			break;
+		case NAME_POPUP_EDIT_CATEGORY_NAME:
+			_animation->set_category_name(_selected_category, _name_popup_line_edit->get_text());
+			break;
+		case NAME_POPUP_ADD_ANIMATION_NAME:
+			ERR_FAIL_COND(_selected_category == -1);
+
+			_selected_animation = _animation->add_animation(_selected_category);
+			_animation->set_animation_name(_selected_category, _selected_animation, _name_popup_line_edit->get_text());
+			break;
+		case NAME_POPUP_EDIT_ANIMATION_NAME:
+			ERR_FAIL_COND(_selected_category == -1);
+			ERR_FAIL_COND(_selected_animation == -1);
+
+			_animation->set_animation_name(_selected_category, _selected_animation, _name_popup_line_edit->get_text());
+			break;
+	}
+
+	refresh_option_buttons();
+}
+
+void ProceduralAnimationEditor::on_delete_popup_confirmed() {
+	switch(_delete_popup_action) {
+		case DELETE_POPUP_CATEGORY:
+			ERR_FAIL_COND(_selected_category == -1);
+
+			_animation->remove_category(_selected_category);
+
+			_selected_category = -1;
+			_selected_animation = -1;
+
+			refresh_option_buttons();
+			break;
+		case DELETE_POPUP_ANIMATION:
+			ERR_FAIL_COND(_selected_category == -1);
+			ERR_FAIL_COND(_selected_animation == -1);
+
+			_animation->remove_animation(_selected_category, _selected_animation);
+
+			_selected_animation = -1;
+
+			refresh_animation_option_button();
+			break;
+		case DELETE_POPUP_KEYFRAME:
+			
+			break;
+	}
 }
 
 void ProceduralAnimationEditor::add_frame_button_pressed() {
-	GraphNode *gn = memnew(GraphNode);
-	gn->set_title("Animation Frame");
-	gn->set_show_close_button(true);
-	//gn->set_position()
+	if (_selected_category == -1 || _selected_animation == -1)
+		return;
 
-	Label *l1 = memnew(Label);
-	l1->set_text("Name");
-	gn->add_child(l1);
+	int id = _animation->add_keyframe(_selected_category, _selected_animation);
 
-	LineEdit *le = memnew(LineEdit);
-	gn->add_child(le);
-
-	Label *l2 = memnew(Label);
-	l2->set_text("Keyframe");
-	gn->add_child(l2);
-
-	HBoxContainer *kfc = memnew(HBoxContainer);
-	gn->add_child(kfc);
-
-	OptionButton *kob = memnew(OptionButton);
-	kfc->add_child(kob);
-
-	Button *kb = memnew(Button);
-	kb->set_text("Edit name");
-	kfc->add_child(kb);
-
-	Label *l3 = memnew(Label);
-	l3->set_text("In Curve");
-	gn->add_child(l3);
-
-	//placeholder
-	Button *pb = memnew(Button);
-	pb->set_text("Edit / Show");
-	pb->set_custom_minimum_size(Size2(0, 69) * EDSCALE);
-	gn->add_child(pb);
-
-	gn->set_slot(0, true, 0, Color(0, 1, 0), true, 0, Color(0, 1, 0));
-
+	ProceduralAnimationEditorGraphNode *gn = memnew(ProceduralAnimationEditorGraphNode);
+	gn->set_id(id);
 	_graph_edit->add_child(gn);
 }
 
 void ProceduralAnimationEditor::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("on_category_option_button_pressed", "id"), &ProceduralAnimationEditor::on_category_option_button_pressed);
+
+	ClassDB::bind_method(D_METHOD("category_tool_button_id_pressed", "id"), &ProceduralAnimationEditor::category_tool_button_id_pressed);
+	ClassDB::bind_method(D_METHOD("animation_tool_button_id_pressed", "id"), &ProceduralAnimationEditor::animation_tool_button_id_pressed);
+	ClassDB::bind_method(D_METHOD("on_name_popup_confirmed"), &ProceduralAnimationEditor::on_name_popup_confirmed);
+
+	ClassDB::bind_method(D_METHOD("on_delete_popup_confirmed"), &ProceduralAnimationEditor::on_delete_popup_confirmed);
+
 	ClassDB::bind_method(D_METHOD("add_frame_button_pressed"), &ProceduralAnimationEditor::add_frame_button_pressed);
+
+	ClassDB::bind_method(D_METHOD("on_animation_option_button_pressed", "index"), &ProceduralAnimationEditor::on_animation_option_button_pressed);
+
+	ClassDB::bind_method(D_METHOD("on_keyframe_node_changed", "node"), &ProceduralAnimationEditor::on_keyframe_node_changed);
+	
+}
+
+ProceduralAnimationEditor::ProceduralAnimationEditor() {
+	_name_popup_action = NAME_POPUP_ADD_CATEGORY_NAME;
+	_selected_category = -1;
+	_selected_animation = -1;
 }
 
 ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 	set_h_size_flags(SIZE_EXPAND_FILL);
+
+	_name_popup_action = NAME_POPUP_ADD_CATEGORY_NAME;
+	_selected_category = -1;
+	_selected_animation = -1;
 
 	//top bar
 	HBoxContainer *hbc = memnew(HBoxContainer);
@@ -64,29 +299,33 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 	categtnb->set_text("Category");
 
 	PopupMenu *cpm = categtnb->get_popup();
-	cpm->add_item("Add");
-	cpm->add_item("Delete");
-	cpm->add_item("Rename");
+	cpm->add_item("Add", 0);
+	cpm->add_item("Rename", 1);
+	cpm->add_item("Delete", 2);
+	cpm->connect("id_pressed", this, "category_tool_button_id_pressed");
 
 	hbc->add_child(categtnb);
 
-	OptionButton *cob = memnew(OptionButton);
-	cob->set_h_size_flags(SIZE_EXPAND_FILL);
-	hbc->add_child(cob);
+	_category_option_button = memnew(OptionButton);
+	_category_option_button->set_h_size_flags(SIZE_EXPAND_FILL);
+	_category_option_button->connect("item_selected", this, "on_category_option_button_pressed");
+	hbc->add_child(_category_option_button);
 
 	MenuButton *animtn = memnew(MenuButton);
 	animtn->set_text("Animation");
 
 	PopupMenu *apm = animtn->get_popup();
-	apm->add_item("Add");
-	apm->add_item("Delete");
-	apm->add_item("Rename");
+	apm->add_item("Add", 0);
+	apm->add_item("Rename", 1);
+	apm->add_item("Delete", 2);
+	apm->connect("id_pressed", this, "animation_tool_button_id_pressed");
 
 	hbc->add_child(animtn);
 
-	OptionButton *cab = memnew(OptionButton);
-	cab->set_h_size_flags(SIZE_EXPAND_FILL);
-	hbc->add_child(cab);
+	_animation_option_button = memnew(OptionButton);
+	_animation_option_button->set_h_size_flags(SIZE_EXPAND_FILL);
+	_animation_option_button->connect("item_selected", this, "on_animation_option_button_pressed");
+	hbc->add_child(_animation_option_button);
 
 	Button *aafb = memnew(Button);
 	aafb->set_text("add frame");
@@ -115,11 +354,21 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 
 	_start_node->set_slot(0, false, 0, Color(0, 1, 0), true, 0, Color(0, 1, 0));
 
-	Node *popups = memnew(Node);
+	Control *popups = memnew(Control);
 	add_child(popups);
+
+	//delete confirm popup
+	_delete_popuop = memnew(ConfirmationDialog);
+	_delete_popuop->connect("confirmed", this, "on_delete_popup_confirmed");
+	popups->add_child(_delete_popuop);
+
+	Label *dellabel = memnew(Label);
+	dellabel->set_text("Delete?");
+	_delete_popuop->add_child(dellabel);
 
 	//name popup
 	_name_popuop = memnew(ConfirmationDialog);
+	_name_popuop->connect("confirmed", this, "on_name_popup_confirmed");
 	popups->add_child(_name_popuop);
 
 	VBoxContainer *name_popup_container = memnew(VBoxContainer);
@@ -132,7 +381,121 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 	_name_popup_line_edit = memnew(LineEdit);
 	name_popup_container->add_child(_name_popup_line_edit);
 }
+
 ProceduralAnimationEditor::~ProceduralAnimationEditor() {
+}
+
+
+int ProceduralAnimationEditorGraphNode::get_id() const {
+	return _id;
+}
+void ProceduralAnimationEditorGraphNode::set_id(const int id){
+	_id = id;
+	emit_signal("graphnode_changed", this);
+}
+
+String ProceduralAnimationEditorGraphNode::get_keyframe_name() const {
+	return _name->get_text();
+}
+void ProceduralAnimationEditorGraphNode::set_keyframe_name(const String &value) {
+	_name->set_text(value);
+	//emit_signal("graphnode_changed", this);
+}
+void ProceduralAnimationEditorGraphNode::on_keyframe_name_modified(const String &value) {
+	emit_signal("graphnode_changed", this);
+}
+
+void ProceduralAnimationEditorGraphNode::set_animation_keyframe_str(const String &value) {
+	set_animation_keyframe_index(value.to_int());
+}
+
+int ProceduralAnimationEditorGraphNode::get_animation_keyframe_index() const {
+	return _animation_keyframe_index;
+}
+void ProceduralAnimationEditorGraphNode::set_animation_keyframe_index(const int value) {
+	_animation_keyframe_index = value;
+	emit_signal("graphnode_changed", this);
+}
+
+int ProceduralAnimationEditorGraphNode::get_next_keyframe() const {
+	return _next_keyframe;
+}
+void ProceduralAnimationEditorGraphNode::set_next_keyframe(const int value) {
+	_next_keyframe = value;
+	emit_signal("graphnode_changed", this);
+}
+
+Ref<Curve> ProceduralAnimationEditorGraphNode::get_in_curve() const {
+	return _in_curve;
+}
+void ProceduralAnimationEditorGraphNode::set_in_curve(const Ref<Curve> &value) {
+	_in_curve = value;
+	emit_signal("graphnode_changed", this);
+}
+
+//void ProceduralAnimationEditorGraphNode::set_position(const Vector2 &value) {
+	//Control::set_position(value);
+
+	//emit_signal("graphnode_changed", this);
+//}
+
+ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
+	_id = 0;
+
+	_animation_keyframe_index = 0;
+	_next_keyframe = 0;
+
+	set_title("Animation Frame");
+	set_show_close_button(true);
+	//gn->set_position()
+
+	Label *l1 = memnew(Label);
+	l1->set_text("Name");
+	add_child(l1);
+
+	_name = memnew(LineEdit);
+	_name->connect("text_entered", this, "on_keyframe_name_modified");
+	add_child(_name);
+
+	Label *l2 = memnew(Label);
+	l2->set_text("Keyframe");
+	add_child(l2);
+
+	HBoxContainer *kfc = memnew(HBoxContainer);
+	add_child(kfc);
+
+	//OptionButton *kob = memnew(OptionButton);
+	SpinBox *kob = memnew(SpinBox);
+	kob->set_h_size_flags(SIZE_EXPAND_FILL);
+	kob->get_line_edit()->connect("text_entered", this, "set_animation_keyframe_str");
+	kfc->add_child(kob);
+
+	//Button *kb = memnew(Button);
+	//kb->set_text("E");
+	//kfc->add_child(kb);
+
+	Label *l3 = memnew(Label);
+	l3->set_text("In Curve");
+	add_child(l3);
+
+	//placeholder
+	Button *pb = memnew(Button);
+	pb->set_text("Edit / Show");
+	pb->set_custom_minimum_size(Size2(0, 69) * EDSCALE);
+	add_child(pb);
+
+	set_slot(0, true, 0, Color(0, 1, 0), true, 0, Color(0, 1, 0));
+}
+
+ProceduralAnimationEditorGraphNode::~ProceduralAnimationEditorGraphNode() {
+	_in_curve.unref();
+}
+
+void ProceduralAnimationEditorGraphNode::_bind_methods() {
+	ADD_SIGNAL(MethodInfo("graphnode_changed", PropertyInfo(Variant::OBJECT, "node", PROPERTY_HINT_RESOURCE_TYPE, "Node")));
+
+	ClassDB::bind_method(D_METHOD("set_animation_keyframe_str", "name"), &ProceduralAnimationEditorGraphNode::set_animation_keyframe_str);
+	ClassDB::bind_method(D_METHOD("on_keyframe_name_modified", "name"), &ProceduralAnimationEditorGraphNode::on_keyframe_name_modified);
 }
 
 void ProceduralAnimationEditorPlugin::edit(Object *p_object) {

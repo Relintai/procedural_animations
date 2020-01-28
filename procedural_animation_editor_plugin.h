@@ -13,10 +13,39 @@ class ProceduralAnimationEditor : public VBoxContainer {
 	GDCLASS(ProceduralAnimationEditor, VBoxContainer);
 
 public:
+	enum NamePopupActions {
+		NAME_POPUP_ADD_CATEGORY_NAME,
+		NAME_POPUP_EDIT_CATEGORY_NAME,
+		NAME_POPUP_ADD_ANIMATION_NAME,
+		NAME_POPUP_EDIT_ANIMATION_NAME,
+	};
+
+	enum DeletePopupActions {
+		DELETE_POPUP_CATEGORY,
+		DELETE_POPUP_ANIMATION,
+		DELETE_POPUP_KEYFRAME,
+	};
+
+public:
 	void edit(const Ref<ProceduralAnimation> &animation);
 	void add_frame_button_pressed();
 
-	ProceduralAnimationEditor() {}
+	void load_selected_animation();
+	void clear_keyframe_nodes();
+
+	void on_animation_option_button_pressed(int indx);
+	void on_category_option_button_pressed(int indx);
+	void refresh_option_buttons();
+	void refresh_animation_option_button();
+	void on_keyframe_node_changed(Node *node);
+
+	void category_tool_button_id_pressed(int id);
+	void animation_tool_button_id_pressed(int id);
+	void show_name_popup(NamePopupActions action);
+	void on_name_popup_confirmed();
+	void on_delete_popup_confirmed();
+
+	ProceduralAnimationEditor();
 	ProceduralAnimationEditor(EditorNode *p_editor);
 	~ProceduralAnimationEditor();
 
@@ -24,9 +53,16 @@ protected:
 	static void _bind_methods();
 
 private:
-	int _editor_category;
-	int _editor_category_animation;
+	int _selected_category;
+	int _selected_animation;
 
+	OptionButton *_category_option_button;
+	OptionButton *_animation_option_button;
+
+	DeletePopupActions _delete_popup_action;
+	ConfirmationDialog *_delete_popuop;
+
+	NamePopupActions _name_popup_action;
 	ConfirmationDialog *_name_popuop;
 	Label *_name_pupup_label;
 	LineEdit *_name_popup_line_edit;
@@ -36,8 +72,45 @@ private:
 	GraphEdit *_graph_edit;
 };
 
-class ProceduralAnimationEditorPlugin : public EditorPlugin {
+class ProceduralAnimationEditorGraphNode : public GraphNode {
+	GDCLASS(ProceduralAnimationEditorGraphNode, GraphNode);
 
+public:
+	int get_id() const;
+	void set_id(const int id);
+
+	String get_keyframe_name() const;
+	void set_keyframe_name(const String &value);
+	void on_keyframe_name_modified(const String &value);
+
+	void set_animation_keyframe_str(const String &value);
+	int get_animation_keyframe_index() const;
+	void set_animation_keyframe_index(const int value);
+
+	int get_next_keyframe() const;
+	void set_next_keyframe(const int value);
+
+	Ref<Curve> get_in_curve() const;
+	void set_in_curve(const Ref<Curve> &value);
+
+	//Vector2 get_position() const;
+	//void set_position(const Vector2 &value);
+
+	ProceduralAnimationEditorGraphNode();
+	~ProceduralAnimationEditorGraphNode();
+
+protected:
+	static void _bind_methods();
+
+private:
+	int _id;
+	LineEdit *_name;
+	int _animation_keyframe_index;
+	int _next_keyframe;
+	Ref<Curve> _in_curve;
+};
+
+class ProceduralAnimationEditorPlugin : public EditorPlugin {
 	GDCLASS(ProceduralAnimationEditorPlugin, EditorPlugin);
 
 public:
