@@ -48,6 +48,9 @@ public:
 	void on_name_popup_confirmed();
 	void on_delete_popup_confirmed();
 
+	void on_connection_request(const String &from, const int from_slot, const String &to, const int to_slot);
+	void on_disconnection_request(const String &from, const int from_slot, const String &to, const int to_slot);
+
 	ProceduralAnimationEditor();
 	ProceduralAnimationEditor(EditorNode *p_editor);
 	~ProceduralAnimationEditor();

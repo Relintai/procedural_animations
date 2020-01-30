@@ -176,7 +176,7 @@ void ProceduralAnimation::set_animation_node_position(const int category_index, 
 	cat->animations[animation_index]->position = value;
 }
 
-int ProceduralAnimation::get_start_frame_index(const int category_index, const int animation_index) const {
+int ProceduralAnimation::get_animation_start_frame_index(const int category_index, const int animation_index) const {
 	ERR_FAIL_COND_V(!_categories.has(category_index), 0);
 
 	Category *cat = _categories[category_index];
@@ -185,7 +185,7 @@ int ProceduralAnimation::get_start_frame_index(const int category_index, const i
 
 	return cat->animations[animation_index]->start_frame_index;
 }
-void ProceduralAnimation::set_start_frame_index(const int category_index, const int animation_index, const int value) {
+void ProceduralAnimation::set_animation_start_frame_index(const int category_index, const int animation_index, const int value) {
 	ERR_FAIL_COND(!_categories.has(category_index));
 
 	Category *cat = _categories[category_index];
@@ -591,7 +591,6 @@ void ProceduralAnimation::_get_property_list(List<PropertyInfo> *p_list) const {
 				p_list->push_back(PropertyInfo(Variant::STRING, "categories/" + itos(E->key()) + "/animation/" + itos(A->key()) + "/keyframe/" + itos(K->key()) + "/name", PROPERTY_HINT_NONE, "", property_usange));
 				p_list->push_back(PropertyInfo(Variant::INT, "categories/" + itos(E->key()) + "/animation/" + itos(A->key()) + "/keyframe/" + itos(K->key()) + "/animation_keyframe_index", PROPERTY_HINT_NONE, "", property_usange));
 				p_list->push_back(PropertyInfo(Variant::INT, "categories/" + itos(E->key()) + "/animation/" + itos(A->key()) + "/keyframe/" + itos(K->key()) + "/next_keyframe", PROPERTY_HINT_NONE, "", property_usange));
-				p_list->push_back(PropertyInfo(Variant::INT, "categories/" + itos(E->key()) + "/animation/" + itos(A->key()) + "/keyframe/" + itos(K->key()) + "/next_animation", PROPERTY_HINT_NONE, "", property_usange));
 				p_list->push_back(PropertyInfo(Variant::OBJECT, "categories/" + itos(E->key()) + "/animation/" + itos(A->key()) + "/keyframe/" + itos(K->key()) + "/in_curve", PROPERTY_HINT_RESOURCE_TYPE, "Curve", property_usange));
 				p_list->push_back(PropertyInfo(Variant::VECTOR2, "categories/" + itos(E->key()) + "/animation/" + itos(A->key()) + "/keyframe/" + itos(K->key()) + "/position", PROPERTY_HINT_NONE, "", property_usange));
 			}
@@ -628,8 +627,8 @@ void ProceduralAnimation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_animation_node_position", "category_index", "animation_index"), &ProceduralAnimation::get_animation_node_position);
 	ClassDB::bind_method(D_METHOD("set_animation_node_position", "category_index", "animation_index", "value"), &ProceduralAnimation::set_animation_node_position);
 
-	ClassDB::bind_method(D_METHOD("get_start_frame_index", "category_index", "animation_index"), &ProceduralAnimation::get_start_frame_index);
-	ClassDB::bind_method(D_METHOD("set_start_frame_index", "category_index", "animation_index", "value"), &ProceduralAnimation::set_start_frame_index);
+	ClassDB::bind_method(D_METHOD("get_animation_start_frame_index", "category_index", "animation_index"), &ProceduralAnimation::get_animation_start_frame_index);
+	ClassDB::bind_method(D_METHOD("set_animation_start_frame_index", "category_index", "animation_index", "value"), &ProceduralAnimation::set_animation_start_frame_index);
 
 	//Keyframes
 	ClassDB::bind_method(D_METHOD("get_keyframe_indices", "category_index", "animation_index"), &ProceduralAnimation::get_keyframe_indices);

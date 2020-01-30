@@ -43,8 +43,8 @@ public:
 	Vector2 get_animation_node_position(const int category_index, int animation_index) const;
 	void set_animation_node_position(const int category_index, const int animation_index, const Vector2 &value);
 
-	int get_start_frame_index(const int category_index, const int animation_index) const;
-	void set_start_frame_index(const int category_index, const int animation_index, const int value);
+	int get_animation_start_frame_index(const int category_index, const int animation_index) const;
+	void set_animation_start_frame_index(const int category_index, const int animation_index, const int value);
 
 	//Keyframes
 	PoolVector<int> get_keyframe_indices(const int category_index, const int animation_index) const;

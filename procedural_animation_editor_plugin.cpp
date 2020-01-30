@@ -30,6 +30,7 @@ void ProceduralAnimationEditor::load_selected_animation() {
 		int id = kfind[i];
 
 		ProceduralAnimationEditorGraphNode *gn = memnew(ProceduralAnimationEditorGraphNode);
+		gn->set_name(String::num(id));
 		_graph_edit->add_child(gn);
 
 		//gn->set_animation_keyframe_names(animation_names);
@@ -42,9 +43,25 @@ void ProceduralAnimationEditor::load_selected_animation() {
 		gn->set_animation_keyframe_index(_animation->get_keyframe_animation_keyframe_index(_selected_category, _selected_animation, id));
 		gn->connect("graphnode_changed", this, "on_keyframe_node_changed");
 	}
+
+	for (int i = 0; i < kfind.size(); ++i) {
+		int id = kfind[i];
+
+		int ni = _animation->get_keyframe_next_keyframe_index(_selected_category, _selected_animation, id);
+
+		if (ni != -1)
+			_graph_edit->connect_node(String::num(id), 0, String::num(ni), 0);
+	}
+
+	int st = _animation->get_animation_start_frame_index(_selected_category, _selected_animation);
+
+	if (st != -1)
+		_graph_edit->connect_node("Start", 0, String::num(st), 0);
 }
 
 void ProceduralAnimationEditor::clear_keyframe_nodes() {
+	_graph_edit->clear_connections();
+
 	for (int i = 0; i < _graph_edit->get_child_count(); ++i) {
 		Node *n = _graph_edit->get_child(i);
 
@@ -255,6 +272,54 @@ void ProceduralAnimationEditor::on_delete_popup_confirmed() {
 	}
 }
 
+void ProceduralAnimationEditor::on_connection_request(const String &from, const int from_slot, const String &to, const int to_slot) {
+	Node *f = _graph_edit->get_node_or_null(from);
+
+	ProceduralAnimationEditorGraphNode *gn = Object::cast_to<ProceduralAnimationEditorGraphNode>(f);
+	
+	if (gn != NULL) {
+		int ni = _animation->get_keyframe_next_keyframe_index(_selected_category, _selected_animation, gn->get_id());
+
+		if (ni != -1) {
+			_graph_edit->disconnect_node(from, from_slot, String::num(ni), 0);
+		}
+		
+		_animation->set_keyframe_next_keyframe_index(_selected_category, _selected_animation, gn->get_id(), to.to_int());
+	} else {
+		GraphNode *g = Object::cast_to<GraphNode>(f);
+
+		if (g != NULL) {
+			int st = _animation->get_animation_start_frame_index(_selected_category, _selected_animation);
+
+			if (st != -1) {
+				_graph_edit->disconnect_node("Start", 0, String::num(st), 0);
+			}
+			
+			_animation->set_animation_start_frame_index(_selected_category, _selected_animation, to.to_int());
+		} 
+	}
+	
+	_graph_edit->connect_node(from, from_slot, to, to_slot);
+}
+void ProceduralAnimationEditor::on_disconnection_request(const String &from, const int from_slot, const String &to, const int to_slot) {
+	Node *f = _graph_edit->get_node_or_null(from);
+
+	ProceduralAnimationEditorGraphNode *gn = Object::cast_to<ProceduralAnimationEditorGraphNode>(f);
+
+	if (gn != NULL) {
+		_animation->set_keyframe_next_keyframe_index(_selected_category, _selected_animation, gn->get_id(), -1);
+	} else {
+		GraphNode *g = Object::cast_to<GraphNode>(f);
+
+		if (g != NULL) {
+			_animation->set_animation_start_frame_index(_selected_category, _selected_animation, -1);
+		} 
+	}
+
+
+	_graph_edit->disconnect_node(from, from_slot, to, to_slot);
+}
+
 void ProceduralAnimationEditor::add_frame_button_pressed() {
 	if (_selected_category == -1 || _selected_animation == -1)
 		return;
@@ -280,6 +345,9 @@ void ProceduralAnimationEditor::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("on_animation_option_button_pressed", "index"), &ProceduralAnimationEditor::on_animation_option_button_pressed);
 
 	ClassDB::bind_method(D_METHOD("on_keyframe_node_changed", "node"), &ProceduralAnimationEditor::on_keyframe_node_changed);
+
+	ClassDB::bind_method(D_METHOD("on_connection_request", "from", "from_slot", "to", "to_slot"), &ProceduralAnimationEditor::on_connection_request);
+	ClassDB::bind_method(D_METHOD("on_disconnection_request", "from", "from_slot", "to", "to_slot"), &ProceduralAnimationEditor::on_disconnection_request);
 }
 
 ProceduralAnimationEditor::ProceduralAnimationEditor() {
@@ -342,12 +410,16 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 
 	//bottom
 	_graph_edit = memnew(GraphEdit);
+	_graph_edit->set_right_disconnects(true);
 	_graph_edit->set_h_size_flags(SIZE_EXPAND_FILL);
 	_graph_edit->set_v_size_flags(SIZE_EXPAND_FILL);
 	_graph_edit->set_custom_minimum_size(Size2(0, 200) * EDSCALE);
+	_graph_edit->connect("connection_request", this, "on_connection_request");
+	_graph_edit->connect("disconnection_request", this, "on_disconnection_request");
 	add_child(_graph_edit);
 
 	_start_node = memnew(GraphNode);
+	_start_node->set_name("Start");
 	_start_node->set_title("Start");
 	_start_node->set_show_close_button(false);
 	_graph_edit->add_child(_start_node);
