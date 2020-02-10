@@ -414,8 +414,12 @@ void ProceduralAnimation::set_keyframe_node_position(const int category_index, c
 	ae->keyframes[keyframe_index]->position = value;
 }
 
+void ProceduralAnimation::initialize() {
+
+}
 
 ProceduralAnimation::ProceduralAnimation() {
+	_initialized = false;
 }
 
 ProceduralAnimation::~ProceduralAnimation() {
@@ -427,6 +431,347 @@ ProceduralAnimation::~ProceduralAnimation() {
 
 	_animation.unref();
 }
+
+
+ProceduralAnimation::TransformAnimationKey ProceduralAnimation::_interpolate(const ProceduralAnimation::TransformAnimationKey &p_a, const ProceduralAnimation::TransformAnimationKey &p_b, float p_c) const {
+
+	TransformAnimationKey ret;
+	ret.loc = _interpolate(p_a.loc, p_b.loc, p_c);
+	ret.rot = _interpolate(p_a.rot, p_b.rot, p_c);
+	ret.scale = _interpolate(p_a.scale, p_b.scale, p_c);
+
+	return ret;
+}
+
+Vector3 ProceduralAnimation::_interpolate(const Vector3 &p_a, const Vector3 &p_b, float p_c) const {
+
+	return p_a.linear_interpolate(p_b, p_c);
+}
+Quat ProceduralAnimation::_interpolate(const Quat &p_a, const Quat &p_b, float p_c) const {
+
+	return p_a.slerp(p_b, p_c);
+}
+Variant ProceduralAnimation::_interpolate(const Variant &p_a, const Variant &p_b, float p_c) const {
+
+	Variant dst;
+	Variant::interpolate(p_a, p_b, p_c, dst);
+	return dst;
+}
+
+float ProceduralAnimation::_interpolate(const float &p_a, const float &p_b, float p_c) const {
+
+	return p_a * (1.0 - p_c) + p_b * p_c;
+}
+
+ProceduralAnimation::TransformAnimationKey ProceduralAnimation::_cubic_interpolate(const ProceduralAnimation::TransformAnimationKey &p_pre_a, const ProceduralAnimation::TransformAnimationKey &p_a, const ProceduralAnimation::TransformAnimationKey &p_b, const ProceduralAnimation::TransformAnimationKey &p_post_b, float p_c) const {
+
+	TransformAnimationKey tk;
+
+	tk.loc = p_a.loc.cubic_interpolate(p_b.loc, p_pre_a.loc, p_post_b.loc, p_c);
+	tk.scale = p_a.scale.cubic_interpolate(p_b.scale, p_pre_a.scale, p_post_b.scale, p_c);
+	tk.rot = p_a.rot.cubic_slerp(p_b.rot, p_pre_a.rot, p_post_b.rot, p_c);
+
+	return tk;
+}
+Vector3 ProceduralAnimation::_cubic_interpolate(const Vector3 &p_pre_a, const Vector3 &p_a, const Vector3 &p_b, const Vector3 &p_post_b, float p_c) const {
+
+	return p_a.cubic_interpolate(p_b, p_pre_a, p_post_b, p_c);
+}
+Quat ProceduralAnimation::_cubic_interpolate(const Quat &p_pre_a, const Quat &p_a, const Quat &p_b, const Quat &p_post_b, float p_c) const {
+
+	return p_a.cubic_slerp(p_b, p_pre_a, p_post_b, p_c);
+}
+Variant ProceduralAnimation::_cubic_interpolate(const Variant &p_pre_a, const Variant &p_a, const Variant &p_b, const Variant &p_post_b, float p_c) const {
+
+	Variant::Type type_a = p_a.get_type();
+	Variant::Type type_b = p_b.get_type();
+	Variant::Type type_pa = p_pre_a.get_type();
+	Variant::Type type_pb = p_post_b.get_type();
+
+	//make int and real play along
+
+	uint32_t vformat = 1 << type_a;
+	vformat |= 1 << type_b;
+	vformat |= 1 << type_pa;
+	vformat |= 1 << type_pb;
+
+	if (vformat == ((1 << Variant::INT) | (1 << Variant::REAL)) || vformat == (1 << Variant::REAL)) {
+		//mix of real and int
+
+		real_t p0 = p_pre_a;
+		real_t p1 = p_a;
+		real_t p2 = p_b;
+		real_t p3 = p_post_b;
+
+		float t = p_c;
+		float t2 = t * t;
+		float t3 = t2 * t;
+
+		return 0.5f * ((p1 * 2.0f) +
+							  (-p0 + p2) * t +
+							  (2.0f * p0 - 5.0f * p1 + 4 * p2 - p3) * t2 +
+							  (-p0 + 3.0f * p1 - 3.0f * p2 + p3) * t3);
+
+	} else if ((vformat & (vformat - 1))) {
+
+		return p_a; //can't interpolate, mix of types
+	}
+
+	switch (type_a) {
+
+		case Variant::VECTOR2: {
+
+			Vector2 a = p_a;
+			Vector2 b = p_b;
+			Vector2 pa = p_pre_a;
+			Vector2 pb = p_post_b;
+
+			return a.cubic_interpolate(b, pa, pb, p_c);
+		}
+		case Variant::RECT2: {
+
+			Rect2 a = p_a;
+			Rect2 b = p_b;
+			Rect2 pa = p_pre_a;
+			Rect2 pb = p_post_b;
+
+			return Rect2(
+					a.position.cubic_interpolate(b.position, pa.position, pb.position, p_c),
+					a.size.cubic_interpolate(b.size, pa.size, pb.size, p_c));
+		}
+		case Variant::VECTOR3: {
+
+			Vector3 a = p_a;
+			Vector3 b = p_b;
+			Vector3 pa = p_pre_a;
+			Vector3 pb = p_post_b;
+
+			return a.cubic_interpolate(b, pa, pb, p_c);
+		}
+		case Variant::QUAT: {
+
+			Quat a = p_a;
+			Quat b = p_b;
+			Quat pa = p_pre_a;
+			Quat pb = p_post_b;
+
+			return a.cubic_slerp(b, pa, pb, p_c);
+		}
+		case Variant::AABB: {
+
+			AABB a = p_a;
+			AABB b = p_b;
+			AABB pa = p_pre_a;
+			AABB pb = p_post_b;
+
+			return AABB(
+					a.position.cubic_interpolate(b.position, pa.position, pb.position, p_c),
+					a.size.cubic_interpolate(b.size, pa.size, pb.size, p_c));
+		}
+		default: {
+
+			return _interpolate(p_a, p_b, p_c);
+		}
+	}
+}
+float ProceduralAnimation::_cubic_interpolate(const float &p_pre_a, const float &p_a, const float &p_b, const float &p_post_b, float p_c) const {
+
+	return _interpolate(p_a, p_b, p_c);
+}
+
+template <class T>
+T ProceduralAnimation::_interpolate(const Vector<ProceduralAnimation::AnimationKey > &p_keys, float p_time, ProceduralAnimation::KeyInterpolationType p_interp, bool p_loop_wrap, bool *p_ok) const {
+/*
+	int len = _find(p_keys, length) + 1; // try to find last key (there may be more past the end)
+
+	if (len <= 0) {
+		// (-1 or -2 returned originally) (plus one above)
+		// meaning no keys, or only key time is larger than length
+		if (p_ok)
+			*p_ok = false;
+		return T();
+	} else if (len == 1) { // one key found (0+1), return it
+
+		if (p_ok)
+			*p_ok = true;
+		return p_keys[0].value;
+	}
+
+	int idx = _find(p_keys, p_time);
+
+	ERR_FAIL_COND_V(idx == -2, T());
+
+	bool result = true;
+	int next = 0;
+	float c = 0;
+	// prepare for all cases of interpolation
+
+	if (loop && p_loop_wrap) {
+		// loop
+		if (idx >= 0) {
+
+			if ((idx + 1) < len) {
+
+				next = idx + 1;
+				float delta = p_keys[next].time - p_keys[idx].time;
+				float from = p_time - p_keys[idx].time;
+
+				if (Math::is_zero_approx(delta))
+					c = 0;
+				else
+					c = from / delta;
+
+			} else {
+
+				next = 0;
+				float delta = (length - p_keys[idx].time) + p_keys[next].time;
+				float from = p_time - p_keys[idx].time;
+
+				if (Math::is_zero_approx(delta))
+					c = 0;
+				else
+					c = from / delta;
+			}
+
+		} else {
+			// on loop, behind first key
+			idx = len - 1;
+			next = 0;
+			float endtime = (length - p_keys[idx].time);
+			if (endtime < 0) // may be keys past the end
+				endtime = 0;
+			float delta = endtime + p_keys[next].time;
+			float from = endtime + p_time;
+
+			if (Math::is_zero_approx(delta))
+				c = 0;
+			else
+				c = from / delta;
+		}
+
+	} else { // no loop
+
+		if (idx >= 0) {
+
+			if ((idx + 1) < len) {
+
+				next = idx + 1;
+				float delta = p_keys[next].time - p_keys[idx].time;
+				float from = p_time - p_keys[idx].time;
+
+				if (Math::is_zero_approx(delta))
+					c = 0;
+				else
+					c = from / delta;
+
+			} else {
+
+				next = idx;
+			}
+
+		} else {
+
+			// only allow extending first key to anim start if looping
+			if (loop)
+				idx = next = 0;
+			else
+				result = false;
+		}
+	}
+
+	if (p_ok)
+		*p_ok = result;
+	if (!result)
+		return T();
+
+	float tr = p_keys[idx].transition;
+
+	if (tr == 0 || idx == next) {
+		// don't interpolate if not needed
+		return p_keys[idx].value;
+	}
+
+	if (tr != 1.0) {
+
+		c = Math::ease(c, tr);
+	}
+
+	switch (p_interp) {
+
+		case INTERPOLATION_NEAREST: {
+
+			return p_keys[idx].value;
+		} break;
+		case INTERPOLATION_LINEAR: {
+
+			return _interpolate(p_keys[idx].value, p_keys[next].value, c);
+		} break;
+		case INTERPOLATION_CUBIC: {
+			int pre = idx - 1;
+			if (pre < 0)
+				pre = 0;
+			int post = next + 1;
+			if (post >= len)
+				post = next;
+
+			return _cubic_interpolate(p_keys[pre].value, p_keys[idx].value, p_keys[next].value, p_keys[post].value, c);
+
+		} break;
+		default: return p_keys[idx].value;
+	}
+*/
+	// do a barrel roll
+
+	return T();
+}
+
+/*
+Error ProceduralAnimation::transform_track_interpolate(int p_track, float p_time, Vector3 *r_loc, Quat *r_rot, Vector3 *r_scale) const {
+
+	ERR_FAIL_INDEX_V(p_track, tracks.size(), ERR_INVALID_PARAMETER);
+	Track *t = tracks[p_track];
+	ERR_FAIL_COND_V(t->type != TYPE_TRANSFORM, ERR_INVALID_PARAMETER);
+
+	TransformTrack *tt = static_cast<TransformTrack *>(t);
+
+	bool ok = false;
+
+	TransformKey tk = _interpolate(tt->transforms, p_time, tt->interpolation, tt->loop_wrap, &ok);
+
+	if (!ok)
+		return ERR_UNAVAILABLE;
+
+	if (r_loc)
+		*r_loc = tk.loc;
+
+	if (r_rot)
+		*r_rot = tk.rot;
+
+	if (r_scale)
+		*r_scale = tk.scale;
+
+	return OK;
+}
+
+Variant ProceduralAnimation::value_track_interpolate(int p_track, float p_time) const {
+
+	ERR_FAIL_INDEX_V(p_track, tracks.size(), 0);
+	Track *t = tracks[p_track];
+	ERR_FAIL_COND_V(t->type != TYPE_VALUE, Variant());
+	ValueTrack *vt = static_cast<ValueTrack *>(t);
+
+	bool ok = false;
+
+	Variant res = _interpolate(vt->values, p_time, (vt->update_mode == UPDATE_CONTINUOUS || vt->update_mode == UPDATE_CAPTURE) ? vt->interpolation : INTERPOLATION_NEAREST, vt->loop_wrap, &ok);
+
+	if (ok) {
+
+		return res;
+	}
+
+	return Variant();
+}
+*/
 
 bool ProceduralAnimation::_set(const StringName &p_name, const Variant &p_value) {
 	String name = p_name;

@@ -37,6 +37,129 @@ SOFTWARE.
 class ProceduralAnimation : public Resource {
 	GDCLASS(ProceduralAnimation, Resource);
 
+friend class Animation;
+
+protected:
+	enum AnimationKeyTrackType {
+		TYPE_VALUE = Animation::TYPE_VALUE, 
+		TYPE_TRANSFORM = Animation::TYPE_TRANSFORM,
+		TYPE_METHOD = Animation::TYPE_METHOD,
+		TYPE_BEZIER = Animation::TYPE_BEZIER,
+		TYPE_AUDIO = Animation::TYPE_AUDIO,
+		TYPE_ANIMATION = Animation::TYPE_ANIMATION,
+		TYPE_NONE,
+	};
+
+	enum KeyInterpolationType {
+		INTERPOLATION_NEAREST = Animation::INTERPOLATION_NEAREST,
+		INTERPOLATION_LINEAR = Animation::INTERPOLATION_LINEAR,
+		INTERPOLATION_CUBIC = Animation::INTERPOLATION_CUBIC,
+		INTERPOLATION_CURVE,
+	};
+
+	/* Key data */
+	struct AnimationKey {
+		AnimationKeyTrackType type;
+		NodePath path;
+		bool enabled;
+
+		AnimationKey() { 
+			type = TYPE_NONE;
+			enabled = true;
+		}
+	};
+
+	struct VariantAnimationKey : public AnimationKey {
+		Variant value;
+
+		VariantAnimationKey() { 
+			type = TYPE_VALUE;
+		}
+	};
+
+	struct TransformAnimationKey : public AnimationKey {
+		Vector3 loc;
+		Quat rot;
+		Vector3 scale;
+
+		TransformAnimationKey() : AnimationKey() { 
+			type = TYPE_TRANSFORM;
+		}
+	};
+
+	struct MethodAnimationKey : public AnimationKey {
+		StringName method;
+		Vector<Variant> params;
+
+		MethodAnimationKey() : AnimationKey() { 
+			type = TYPE_METHOD;
+		}
+	};
+
+	struct AudioAnimationKey : public AnimationKey {
+		RES stream;
+		float start_offset;
+		float end_offset;
+
+		AudioAnimationKey() : AnimationKey() {
+			type = TYPE_AUDIO;
+			start_offset = 0;
+			end_offset = 0;
+		}
+	};
+
+	/* Animation data */
+
+	struct AnimationKeyFrame {
+		String name;
+		int animation_keyframe_index;
+		int next_keyframe;
+		Ref<Curve> in_curve;
+		Vector2 position;
+		Vector<AnimationKey> keys;
+
+		AnimationKeyFrame() {
+			animation_keyframe_index = 0;
+			next_keyframe = -1;
+			in_curve.instance();
+		}
+
+		~AnimationKeyFrame() {
+			in_curve.unref();
+			keys.clear();
+		}
+	};
+
+	struct AnimationEntry {
+		String name;
+		Vector2 position;
+		int start_frame_index;
+		Map<int, AnimationKeyFrame *> keyframes;
+
+		AnimationEntry() {
+			start_frame_index = -1;
+		}
+
+		~AnimationEntry() {
+			for (Map<int, AnimationKeyFrame *>::Element *E = keyframes.front(); E; E = E->next())
+				memdelete(E->get());
+
+			keyframes.clear();
+		}
+	};
+
+	struct Category {
+		String name;
+		Map<int, AnimationEntry *> animations;
+
+		~Category() {
+			for (Map<int, AnimationEntry *>::Element *E = animations.front(); E; E = E->next())
+				memdelete(E->get());
+
+			animations.clear();
+		}
+	};
+
 public:
 	Ref<Animation> get_animation() const;
 	void set_animation(const Ref<Animation> &value);
@@ -88,8 +211,27 @@ public:
 	Vector2 get_keyframe_node_position(const int category_index, int animation_index, const int keyframe_index) const;
 	void set_keyframe_node_position(const int category_index, const int animation_index, const int keyframe_index, const Vector2 &value);
 
+	void initialize();
+
 	ProceduralAnimation();
 	~ProceduralAnimation();
+
+protected:
+	_FORCE_INLINE_ TransformAnimationKey _interpolate(const TransformAnimationKey &p_a, const TransformAnimationKey &p_b, float p_c) const;
+
+	_FORCE_INLINE_ Vector3 _interpolate(const Vector3 &p_a, const Vector3 &p_b, float p_c) const;
+	_FORCE_INLINE_ Quat _interpolate(const Quat &p_a, const Quat &p_b, float p_c) const;
+	_FORCE_INLINE_ Variant _interpolate(const Variant &p_a, const Variant &p_b, float p_c) const;
+	_FORCE_INLINE_ float _interpolate(const float &p_a, const float &p_b, float p_c) const;
+
+	_FORCE_INLINE_ TransformAnimationKey _cubic_interpolate(const TransformAnimationKey &p_pre_a, const TransformAnimationKey &p_a, const TransformAnimationKey &p_b, const TransformAnimationKey &p_post_b, float p_c) const;
+	_FORCE_INLINE_ Vector3 _cubic_interpolate(const Vector3 &p_pre_a, const Vector3 &p_a, const Vector3 &p_b, const Vector3 &p_post_b, float p_c) const;
+	_FORCE_INLINE_ Quat _cubic_interpolate(const Quat &p_pre_a, const Quat &p_a, const Quat &p_b, const Quat &p_post_b, float p_c) const;
+	_FORCE_INLINE_ Variant _cubic_interpolate(const Variant &p_pre_a, const Variant &p_a, const Variant &p_b, const Variant &p_post_b, float p_c) const;
+	_FORCE_INLINE_ float _cubic_interpolate(const float &p_pre_a, const float &p_a, const float &p_b, const float &p_post_b, float p_c) const;
+
+	template <class T>
+	_FORCE_INLINE_ T _interpolate(const Vector<AnimationKey > &p_keys, float p_time, KeyInterpolationType p_interp, bool p_loop_wrap, bool *p_ok) const;
 
 protected:
 	bool _set(const StringName &p_name, const Variant &p_value);
@@ -97,56 +239,9 @@ protected:
 	void _get_property_list(List<PropertyInfo> *p_list) const;
 	static void _bind_methods();
 
-protected:
-	struct AnimationKeyFrame {
-		String name;
-		int animation_keyframe_index;
-		int next_keyframe;
-		Ref<Curve> in_curve;
-		Vector2 position;
-
-		AnimationKeyFrame() {
-			animation_keyframe_index = 0;
-			next_keyframe = -1;
-			in_curve.instance();
-		}
-
-		~AnimationKeyFrame() {
-			in_curve.unref();
-		}
-	};
-
-	struct AnimationEntry {
-		String name;
-		Vector2 position;
-		int start_frame_index;
-		Map<int, AnimationKeyFrame *> keyframes;
-
-		AnimationEntry() {
-			start_frame_index = -1;
-		}
-
-		~AnimationEntry() {
-			for (Map<int, AnimationKeyFrame *>::Element *E = keyframes.front(); E; E = E->next())
-				memdelete(E->get());
-
-			keyframes.clear();
-		}
-	};
-
-	struct Category {
-		String name;
-		Map<int, AnimationEntry *> animations;
-
-		~Category() {
-			for (Map<int, AnimationEntry *>::Element *E = animations.front(); E; E = E->next())
-				memdelete(E->get());
-
-			animations.clear();
-		}
-	};
-
 private:
+	bool _initialized;
+
 	String _editor_add_category_name;
 	String _add_editor_category_animation_name;
 
