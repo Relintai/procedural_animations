@@ -26,9 +26,9 @@ SOFTWARE.
 #include "core/resource.h"
 
 #include "core/map.h"
-#include "core/vector.h"
-#include "core/pool_vector.h"
 #include "core/math/vector2.h"
+#include "core/pool_vector.h"
+#include "core/vector.h"
 #include "scene/resources/animation.h"
 #include "scene/resources/curve.h"
 
@@ -37,11 +37,11 @@ SOFTWARE.
 class ProceduralAnimation : public Resource {
 	GDCLASS(ProceduralAnimation, Resource);
 
-friend class Animation;
+	friend class Animation;
 
 protected:
 	enum AnimationKeyTrackType {
-		TYPE_VALUE = Animation::TYPE_VALUE, 
+		TYPE_VALUE = Animation::TYPE_VALUE,
 		TYPE_TRANSFORM = Animation::TYPE_TRANSFORM,
 		TYPE_METHOD = Animation::TYPE_METHOD,
 		TYPE_BEZIER = Animation::TYPE_BEZIER,
@@ -63,7 +63,7 @@ protected:
 		NodePath path;
 		bool enabled;
 
-		AnimationKey() { 
+		AnimationKey() {
 			type = TYPE_NONE;
 			enabled = true;
 		}
@@ -72,7 +72,7 @@ protected:
 	struct VariantAnimationKey : public AnimationKey {
 		Variant value;
 
-		VariantAnimationKey() { 
+		VariantAnimationKey() {
 			type = TYPE_VALUE;
 		}
 	};
@@ -82,7 +82,8 @@ protected:
 		Quat rot;
 		Vector3 scale;
 
-		TransformAnimationKey() : AnimationKey() { 
+		TransformAnimationKey() :
+				AnimationKey() {
 			type = TYPE_TRANSFORM;
 		}
 	};
@@ -91,7 +92,8 @@ protected:
 		StringName method;
 		Vector<Variant> params;
 
-		MethodAnimationKey() : AnimationKey() { 
+		MethodAnimationKey() :
+				AnimationKey() {
 			type = TYPE_METHOD;
 		}
 	};
@@ -101,7 +103,8 @@ protected:
 		float start_offset;
 		float end_offset;
 
-		AudioAnimationKey() : AnimationKey() {
+		AudioAnimationKey() :
+				AnimationKey() {
 			type = TYPE_AUDIO;
 			start_offset = 0;
 			end_offset = 0;
@@ -116,7 +119,6 @@ protected:
 		int next_keyframe;
 		Ref<Curve> in_curve;
 		Vector2 position;
-		Vector<AnimationKey> keys;
 
 		AnimationKeyFrame() {
 			animation_keyframe_index = 0;
@@ -126,7 +128,6 @@ protected:
 
 		~AnimationKeyFrame() {
 			in_curve.unref();
-			keys.clear();
 		}
 	};
 
@@ -212,6 +213,7 @@ public:
 	void set_keyframe_node_position(const int category_index, const int animation_index, const int keyframe_index, const Vector2 &value);
 
 	void initialize();
+	void load_keyframe_data(int keyframe_index);
 
 	ProceduralAnimation();
 	~ProceduralAnimation();
@@ -231,7 +233,7 @@ protected:
 	_FORCE_INLINE_ float _cubic_interpolate(const float &p_pre_a, const float &p_a, const float &p_b, const float &p_post_b, float p_c) const;
 
 	template <class T>
-	_FORCE_INLINE_ T _interpolate(const Vector<AnimationKey > &p_keys, float p_time, KeyInterpolationType p_interp, bool p_loop_wrap, bool *p_ok) const;
+	_FORCE_INLINE_ T _interpolate(const Vector<AnimationKey> &p_keys, float p_time, KeyInterpolationType p_interp, bool p_loop_wrap, bool *p_ok) const;
 
 protected:
 	bool _set(const StringName &p_name, const Variant &p_value);
@@ -246,6 +248,7 @@ private:
 	String _add_editor_category_animation_name;
 
 	Map<int, Category *> _categories;
+	Map<int, Vector<AnimationKey> *> _animation_data;
 
 	Ref<Animation> _animation;
 	Map<int, String> _keyframe_names;

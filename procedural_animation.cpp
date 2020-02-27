@@ -56,7 +56,7 @@ PoolVector<String> ProceduralAnimation::get_animation_keyframe_names() const {
 		names.set(i, String::num(E->key()) + " " + _keyframe_names[E->key()]);
 		++i;
 	}
-	
+
 	return names;
 }
 
@@ -70,7 +70,7 @@ PoolVector<int> ProceduralAnimation::get_category_indices() const {
 		idxr.set(i, E->key());
 		++i;
 	}
-	
+
 	return idxr;
 }
 int ProceduralAnimation::add_category(const String &name) {
@@ -91,7 +91,7 @@ int ProceduralAnimation::add_category(const String &name) {
 }
 void ProceduralAnimation::remove_category(const int index) {
 	ERR_FAIL_COND(!_categories.has(index));
-	
+
 	Category *category = _categories[index];
 
 	_categories.erase(index);
@@ -124,7 +124,7 @@ PoolVector<int> ProceduralAnimation::get_animation_indices(const int category_in
 		idxr.set(i, E->key());
 		++i;
 	}
-	
+
 	return idxr;
 }
 int ProceduralAnimation::add_animation(const int category_index) {
@@ -235,7 +235,7 @@ PoolVector<int> ProceduralAnimation::get_keyframe_indices(const int category_ind
 		idxr.set(i, E->key());
 		++i;
 	}
-	
+
 	return idxr;
 }
 int ProceduralAnimation::add_keyframe(const int category_index, const int animation_index) {
@@ -415,7 +415,46 @@ void ProceduralAnimation::set_keyframe_node_position(const int category_index, c
 }
 
 void ProceduralAnimation::initialize() {
+	ERR_FAIL_COND(!_animation.is_valid());
 
+	for (Map<int, Vector<AnimationKey> *>::Element *E = _animation_data.front(); E; E = E->next()) {
+		Vector<AnimationKey> *data = E->get();
+		data->clear();
+		memdelete(data);
+	}
+
+	_animation_data.clear();
+
+	for (Map<int, Category *>::Element *E = _categories.front(); E; E = E->next()) {
+		Category *category = E->get();
+
+		for (Map<int, AnimationEntry *>::Element *A = category->animations.front(); A; A = A->next()) {
+			AnimationEntry *anim_entry = A->get();
+
+			for (Map<int, AnimationKeyFrame *>::Element *K = anim_entry->keyframes.front(); K; K = K->next()) {
+				int keyframe_index = K->get()->animation_keyframe_index;
+
+				if (!_animation_data.has(keyframe_index))
+					load_keyframe_data(keyframe_index);
+			}
+		}
+	}
+}
+
+void ProceduralAnimation::load_keyframe_data(int keyframe_index) {
+	ERR_FAIL_COND(!_animation.is_valid());
+
+	Vector<AnimationKey> *vec = NULL;
+
+	if (_animation_data.has(keyframe_index)) {
+		//reload data
+		vec = _animation_data[keyframe_index];
+		vec->clear();
+	} else {
+		vec = memnew(Vector<AnimationKey>);
+	}
+
+	//_animation->get_
 }
 
 ProceduralAnimation::ProceduralAnimation() {
@@ -427,11 +466,18 @@ ProceduralAnimation::~ProceduralAnimation() {
 		memdelete(E->get());
 	}
 
+	for (Map<int, Vector<AnimationKey> *>::Element *E = _animation_data.front(); E; E = E->next()) {
+		Vector<AnimationKey> *data = E->get();
+		data->clear();
+		memdelete(data);
+	}
+
+	_animation_data.clear();
+
 	_categories.clear();
 
 	_animation.unref();
 }
-
 
 ProceduralAnimation::TransformAnimationKey ProceduralAnimation::_interpolate(const ProceduralAnimation::TransformAnimationKey &p_a, const ProceduralAnimation::TransformAnimationKey &p_b, float p_c) const {
 
@@ -580,8 +626,8 @@ float ProceduralAnimation::_cubic_interpolate(const float &p_pre_a, const float 
 }
 
 template <class T>
-T ProceduralAnimation::_interpolate(const Vector<ProceduralAnimation::AnimationKey > &p_keys, float p_time, ProceduralAnimation::KeyInterpolationType p_interp, bool p_loop_wrap, bool *p_ok) const {
-/*
+T ProceduralAnimation::_interpolate(const Vector<ProceduralAnimation::AnimationKey> &p_keys, float p_time, ProceduralAnimation::KeyInterpolationType p_interp, bool p_loop_wrap, bool *p_ok) const {
+	/*
 	int len = _find(p_keys, length) + 1; // try to find last key (there may be more past the end)
 
 	if (len <= 0) {
@@ -952,7 +998,6 @@ void ProceduralAnimation::_get_property_list(List<PropertyInfo> *p_list) const {
 			p_list->push_back(PropertyInfo(Variant::STRING, "categories/" + itos(E->key()) + "/animation/" + itos(A->key()) + "/name", PROPERTY_HINT_NONE, "", property_usange));
 			p_list->push_back(PropertyInfo(Variant::VECTOR2, "categories/" + itos(E->key()) + "/animation/" + itos(A->key()) + "/position", PROPERTY_HINT_NONE, "", property_usange));
 			p_list->push_back(PropertyInfo(Variant::INT, "categories/" + itos(E->key()) + "/animation/" + itos(A->key()) + "/start_frame_index", PROPERTY_HINT_NONE, "", property_usange));
-
 
 			for (Map<int, AnimationKeyFrame *>::Element *K = animation->keyframes.front(); K; K = K->next()) {
 				p_list->push_back(PropertyInfo(Variant::STRING, "categories/" + itos(E->key()) + "/animation/" + itos(A->key()) + "/keyframe/" + itos(K->key()) + "/name", PROPERTY_HINT_NONE, "", property_usange));
