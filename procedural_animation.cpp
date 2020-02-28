@@ -29,6 +29,13 @@ void ProceduralAnimation::set_animation(const Ref<Animation> &value) {
 	_animation = value;
 }
 
+int ProceduralAnimation::get_animation_fps() const {
+	return _animation_fps;
+}
+void ProceduralAnimation::set_animation_fps(const int index) {
+	_animation_fps = index;
+}
+
 String ProceduralAnimation::get_animation_keyframe_name(int keyframe_index) const {
 	if (!_keyframe_names.has(keyframe_index)) {
 		return String::num(keyframe_index);
@@ -454,11 +461,71 @@ void ProceduralAnimation::load_keyframe_data(int keyframe_index) {
 		vec = memnew(Vector<AnimationKey>);
 	}
 
-	//_animation->get_
+	float time = keyframe_index * _animation->get_length() / static_cast<float>(_animation_fps);
+
+	for (int i = 0; i < _animation->get_track_count(); ++i) {
+		int key_index = _animation->track_find_key(i, time, true);
+
+		if (key_index == -1)
+			continue;
+
+		Animation::TrackType tt = _animation->track_get_type(i);
+
+		switch (tt) {
+			case Animation::TYPE_VALUE: {
+				VariantAnimationKey d;
+				d.path = _animation->track_get_path(key_index);
+				d.value = _animation->track_get_key_value(i, key_index);
+
+				vec->push_back(d);
+			} break;
+			case Animation::TYPE_TRANSFORM: {
+				Vector3 loc;
+				Quat rot;
+				Vector3 scale;
+
+				if (_animation->transform_track_get_key(i, key_index, &loc, &rot, &scale) == OK) {
+					TransformAnimationKey d;
+
+					d.path = _animation->track_get_path(key_index);
+					d.loc = loc;
+					d.rot = rot;
+					d.scale = scale;
+
+					vec->push_back(d);
+				}
+			} break;
+			case Animation::TYPE_METHOD: {
+				MethodAnimationKey d;
+				d.path = _animation->track_get_path(key_index);
+
+				d.method = _animation->method_track_get_name(i, key_index);
+				d.params = _animation->method_track_get_params(i, key_index);
+
+				vec->push_back(d);
+			} break;
+			case Animation::TYPE_BEZIER: {
+				//ignore
+			} break;
+			case Animation::TYPE_AUDIO: {
+				AudioAnimationKey d;
+				d.path = _animation->track_get_path(key_index);
+				d.stream = _animation->audio_track_get_key_stream(i, key_index);
+				d.start_offset = _animation->audio_track_get_key_start_offset(i, key_index);
+				d.end_offset = _animation->audio_track_get_key_end_offset(i, key_index);
+
+				vec->push_back(d);
+			} break;
+			case Animation::TYPE_ANIMATION: {
+				///ignore
+			} break;
+		}
+	}
 }
 
 ProceduralAnimation::ProceduralAnimation() {
 	_initialized = false;
+	_animation_fps = 15;
 }
 
 ProceduralAnimation::~ProceduralAnimation() {
@@ -1015,6 +1082,10 @@ void ProceduralAnimation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_animation", "value"), &ProceduralAnimation::set_animation);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "animation", PROPERTY_HINT_RESOURCE_TYPE, "Animation"), "set_animation", "get_animation");
 
+	ClassDB::bind_method(D_METHOD("get_animation_fps"), &ProceduralAnimation::get_animation_fps);
+	ClassDB::bind_method(D_METHOD("set_animation_fps", "value"), &ProceduralAnimation::set_animation_fps);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "animation_fps"), "set_animation_fps", "get_animation_fps");
+
 	ClassDB::bind_method(D_METHOD("get_animation_keyframe_name", "keyframe_index"), &ProceduralAnimation::get_animation_keyframe_name);
 	ClassDB::bind_method(D_METHOD("set_animation_keyframe_name", "keyframe_index", "value"), &ProceduralAnimation::set_animation_keyframe_name);
 	ClassDB::bind_method(D_METHOD("remove_animation_keyframe_name", "keyframe_index"), &ProceduralAnimation::remove_animation_keyframe_name);
@@ -1061,4 +1132,7 @@ void ProceduralAnimation::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("get_keyframe_node_position", "category_index", "animation_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_node_position);
 	ClassDB::bind_method(D_METHOD("set_keyframe_node_position", "category_index", "animation_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_node_position);
+
+	ClassDB::bind_method(D_METHOD("initialize"), &ProceduralAnimation::initialize);
+	ClassDB::bind_method(D_METHOD("load_keyframe_data", "keyframe_index"), &ProceduralAnimation::load_keyframe_data);
 }

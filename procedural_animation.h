@@ -165,6 +165,9 @@ public:
 	Ref<Animation> get_animation() const;
 	void set_animation(const Ref<Animation> &value);
 
+	int get_animation_fps() const;
+	void set_animation_fps(const int index);
+
 	String get_animation_keyframe_name(int keyframe_index) const;
 	void set_animation_keyframe_name(int keyframe_index, const String &value);
 	void remove_animation_keyframe_name(int keyframe_index);
@@ -243,6 +246,7 @@ protected:
 
 private:
 	bool _initialized;
+	int _animation_fps;
 
 	String _editor_add_category_name;
 	String _add_editor_category_animation_name;
