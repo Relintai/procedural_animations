@@ -14,6 +14,7 @@ sources = [
     "procedural_animation.cpp",
     "procedural_animation_player.cpp",
     "procedural_animation_editor_plugin.cpp",
+    "procedural_animation_player_editor_plugin.cpp",
 ]
 
 if ARGUMENTS.get('custom_modules_shared', 'no') == 'yes':

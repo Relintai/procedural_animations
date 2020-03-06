@@ -124,7 +124,7 @@ public:
 
 	void on_animation_keyframe_spinbox_value_changed(const String &value);
 	void changed();
-	
+
 	ProceduralAnimationEditorGraphNode();
 	~ProceduralAnimationEditorGraphNode();
 
@@ -147,9 +147,9 @@ class ProceduralAnimationEditorPlugin : public EditorPlugin {
 	GDCLASS(ProceduralAnimationEditorPlugin, EditorPlugin);
 
 public:
-	virtual String get_name() const { return "ProceduralAnimation"; }
+	virtual String get_name() const { return "ProceduralAnimationEditor"; }
 	bool has_main_screen() const { return false; }
-	virtual void edit(Object *p_object); 
+	virtual void edit(Object *p_object);
 	virtual bool handles(Object *p_object) const;
 	virtual void make_visible(bool p_visible);
 
