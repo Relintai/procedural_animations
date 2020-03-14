@@ -26,7 +26,6 @@ SOFTWARE.
 #include "procedural_animation_player.h"
 
 #include "procedural_animation_editor_plugin.h"
-#include "procedural_animation_player_editor_plugin.h"
 
 void register_procedural_animations_types() {
 	ClassDB::register_class<ProceduralAnimation>();
@@ -34,7 +33,6 @@ void register_procedural_animations_types() {
 
 #ifdef TOOLS_ENABLED
 	EditorPlugins::add_by_type<ProceduralAnimationEditorPlugin>();
-	EditorPlugins::add_by_type<ProceduralAnimationPlayerEditorPlugin>();
 #endif
 }
 

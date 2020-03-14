@@ -34,6 +34,13 @@ void ProceduralAnimationEditor::edit(const Ref<ProceduralAnimation> &animation) 
 	refresh_option_buttons();
 }
 
+void ProceduralAnimationEditor::edit(ProceduralAnimationPlayer *player) {
+	_animation_player = player;
+
+	_selected_category = -1;
+	_selected_animation = -1;
+}
+
 void ProceduralAnimationEditor::load_selected_animation() {
 	clear_keyframe_nodes();
 
@@ -56,7 +63,7 @@ void ProceduralAnimationEditor::load_selected_animation() {
 		_graph_edit->add_child(gn);
 
 		//gn->set_animation_keyframe_names(animation_names);
-		
+
 		gn->set_id(id);
 		gn->set_offset(_animation->get_keyframe_node_position(_selected_category, _selected_animation, id));
 		gn->set_keyframe_name(_animation->get_keyframe_name(_selected_category, _selected_animation, id));
@@ -240,7 +247,7 @@ void ProceduralAnimationEditor::show_name_popup(NamePopupActions action) {
 }
 
 void ProceduralAnimationEditor::on_name_popup_confirmed() {
-	switch(_name_popup_action) {
+	switch (_name_popup_action) {
 		case NAME_POPUP_ADD_CATEGORY_NAME:
 			_selected_category = _animation->add_category(_name_popup_line_edit->get_text());
 
@@ -267,7 +274,7 @@ void ProceduralAnimationEditor::on_name_popup_confirmed() {
 }
 
 void ProceduralAnimationEditor::on_delete_popup_confirmed() {
-	switch(_delete_popup_action) {
+	switch (_delete_popup_action) {
 		case DELETE_POPUP_CATEGORY:
 			ERR_FAIL_COND(_selected_category == -1);
 
@@ -289,7 +296,7 @@ void ProceduralAnimationEditor::on_delete_popup_confirmed() {
 			refresh_animation_option_button();
 			break;
 		case DELETE_POPUP_KEYFRAME:
-			
+
 			break;
 	}
 }
@@ -298,14 +305,14 @@ void ProceduralAnimationEditor::on_connection_request(const String &from, const 
 	Node *f = _graph_edit->get_node_or_null(from);
 
 	ProceduralAnimationEditorGraphNode *gn = Object::cast_to<ProceduralAnimationEditorGraphNode>(f);
-	
+
 	if (gn != NULL) {
 		int ni = _animation->get_keyframe_next_keyframe_index(_selected_category, _selected_animation, gn->get_id());
 
 		if (ni != -1) {
 			_graph_edit->disconnect_node(from, from_slot, String::num(ni), 0);
 		}
-		
+
 		_animation->set_keyframe_next_keyframe_index(_selected_category, _selected_animation, gn->get_id(), to.to_int());
 	} else {
 		GraphNode *g = Object::cast_to<GraphNode>(f);
@@ -316,11 +323,11 @@ void ProceduralAnimationEditor::on_connection_request(const String &from, const 
 			if (st != -1) {
 				_graph_edit->disconnect_node("Start", 0, String::num(st), 0);
 			}
-			
+
 			_animation->set_animation_start_frame_index(_selected_category, _selected_animation, to.to_int());
-		} 
+		}
 	}
-	
+
 	_graph_edit->connect_node(from, from_slot, to, to_slot);
 }
 void ProceduralAnimationEditor::on_disconnection_request(const String &from, const int from_slot, const String &to, const int to_slot) {
@@ -335,9 +342,8 @@ void ProceduralAnimationEditor::on_disconnection_request(const String &from, con
 
 		if (g != NULL) {
 			_animation->set_animation_start_frame_index(_selected_category, _selected_animation, -1);
-		} 
+		}
 	}
-
 
 	_graph_edit->disconnect_node(from, from_slot, to, to_slot);
 }
@@ -351,6 +357,22 @@ void ProceduralAnimationEditor::add_frame_button_pressed() {
 	ProceduralAnimationEditorGraphNode *gn = memnew(ProceduralAnimationEditorGraphNode);
 	gn->set_id(id);
 	_graph_edit->add_child(gn);
+}
+
+void ProceduralAnimationEditor::_notification(int p_what) {
+
+	switch (p_what) {
+		case NOTIFICATION_THEME_CHANGED: {
+			_play->set_icon(get_icon("PlayStart", "EditorIcons"));
+			_play_from->set_icon(get_icon("Play", "EditorIcons"));
+			_play_bw->set_icon(get_icon("PlayStartBackwards", "EditorIcons"));
+			_play_bw_from->set_icon(get_icon("PlayBackwards", "EditorIcons"));
+
+			_stop->set_icon(get_icon("Stop", "EditorIcons"));
+
+			_pin->set_icon(get_icon("Pin", "EditorIcons"));
+		} break;
+	}
 }
 
 void ProceduralAnimationEditor::_bind_methods() {
@@ -373,12 +395,16 @@ void ProceduralAnimationEditor::_bind_methods() {
 }
 
 ProceduralAnimationEditor::ProceduralAnimationEditor() {
+	_animation_player = NULL;
+
 	_name_popup_action = NAME_POPUP_ADD_CATEGORY_NAME;
 	_selected_category = -1;
 	_selected_animation = -1;
 }
 
 ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
+	_animation_player = NULL;
+
 	set_h_size_flags(SIZE_EXPAND_FILL);
 
 	_name_popup_action = NAME_POPUP_ADD_CATEGORY_NAME;
@@ -426,9 +452,31 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 	aafb->connect("pressed", this, "add_frame_button_pressed");
 	hbc->add_child(aafb);
 
-	Button *pinb = memnew(Button);
-	pinb->set_text("Pin");
-	hbc->add_child(pinb);
+	_play_bw_from = memnew(ToolButton);
+	_play_bw_from->set_tooltip(TTR("Play selected animation backwards from current pos. (A)"));
+	hbc->add_child(_play_bw_from);
+
+	_play_bw = memnew(ToolButton);
+	_play_bw->set_tooltip(TTR("Play selected animation backwards from end. (Shift+A)"));
+	hbc->add_child(_play_bw);
+
+	_stop = memnew(ToolButton);
+	_stop->set_toggle_mode(true);
+	hbc->add_child(_stop);
+	_stop->set_tooltip(TTR("Stop animation playback. (S)"));
+
+	_play = memnew(ToolButton);
+	_play->set_tooltip(TTR("Play selected animation from start. (Shift+D)"));
+	hbc->add_child(_play);
+
+	_play_from = memnew(ToolButton);
+	_play_from->set_tooltip(TTR("Play selected animation from current pos. (D)"));
+	hbc->add_child(_play_from);
+
+	_pin = memnew(ToolButton);
+	_pin->set_toggle_mode(true);
+	_pin->set_tooltip(TTR("Pin"));
+	hbc->add_child(_pin);
 
 	//bottom
 	_graph_edit = memnew(GraphEdit);
@@ -483,11 +531,10 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 ProceduralAnimationEditor::~ProceduralAnimationEditor() {
 }
 
-
 int ProceduralAnimationEditorGraphNode::get_id() const {
 	return _id;
 }
-void ProceduralAnimationEditorGraphNode::set_id(const int id){
+void ProceduralAnimationEditorGraphNode::set_id(const int id) {
 	_id = id;
 	emit_signal("graphnode_changed", this);
 }
@@ -614,7 +661,7 @@ ProceduralAnimationEditorGraphNode::~ProceduralAnimationEditorGraphNode() {
 }
 
 void ProceduralAnimationEditorGraphNode::_notification(int p_what) {
-	switch (p_what){
+	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE:
 			connect("offset_changed", this, "changed");
 			break;
@@ -627,24 +674,33 @@ void ProceduralAnimationEditorGraphNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("on_keyframe_name_modified", "name"), &ProceduralAnimationEditorGraphNode::on_keyframe_name_modified);
 	ClassDB::bind_method(D_METHOD("changed"), &ProceduralAnimationEditorGraphNode::changed);
 	ClassDB::bind_method(D_METHOD("on_animation_keyframe_spinbox_value_changed", "value"), &ProceduralAnimationEditorGraphNode::on_animation_keyframe_spinbox_value_changed);
-
 }
 
 void ProceduralAnimationEditorPlugin::edit(Object *p_object) {
 	if (Object::cast_to<ProceduralAnimation>(p_object)) {
 		animation_editor->edit(Object::cast_to<ProceduralAnimation>(p_object));
 		animation_editor_button->show();
-	} else
+	} else if (Object::cast_to<ProceduralAnimationPlayer>(p_object)) {
+		animation_editor->edit(Object::cast_to<ProceduralAnimationPlayer>(p_object));
+		animation_editor_button->show();
+	} else {
 		animation_editor_button->hide();
+	}
 }
 
 bool ProceduralAnimationEditorPlugin::handles(Object *p_object) const {
-
-	bool handles = p_object->is_class("ProceduralAnimation");
+	bool player = p_object->is_class("ProceduralAnimationPlayer");
+	bool handles = p_object->is_class("ProceduralAnimation") || player;
 
 	if (handles) {
 		animation_editor_button->show();
+
+		if (player)
+			animation_editor_button->set_pressed(true);
 	} else {
+		if (player)
+			animation_editor_button->set_pressed(false);
+
 		animation_editor_button->hide();
 	}
 

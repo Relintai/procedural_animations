@@ -29,8 +29,9 @@ SOFTWARE.
 #include "scene/gui/graph_edit.h"
 #include "scene/gui/menu_button.h"
 
-#include "procedural_animation.h"
 #include "core/core_string_names.h"
+#include "procedural_animation.h"
+#include "procedural_animation_player.h"
 
 #include "editor/plugins/curve_editor_plugin.h"
 
@@ -53,6 +54,8 @@ public:
 
 public:
 	void edit(const Ref<ProceduralAnimation> &animation);
+	void edit(ProceduralAnimationPlayer *player);
+
 	void add_frame_button_pressed();
 
 	void load_selected_animation();
@@ -78,6 +81,7 @@ public:
 	~ProceduralAnimationEditor();
 
 protected:
+	void _notification(int p_what);
 	static void _bind_methods();
 
 private:
@@ -98,6 +102,15 @@ private:
 	GraphNode *_start_node;
 	Ref<ProceduralAnimation> _animation;
 	GraphEdit *_graph_edit;
+
+	Button *_stop;
+	Button *_play;
+	Button *_play_from;
+	Button *_play_bw;
+	Button *_play_bw_from;
+	ToolButton *_pin;
+
+	ProceduralAnimationPlayer *_animation_player;
 };
 
 class ProceduralAnimationEditorGraphNode : public GraphNode {
