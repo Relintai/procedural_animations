@@ -23,11 +23,15 @@ SOFTWARE.
 #ifndef PROCEDURAL_ANIMATION_PLAYER_EDITOR_PLUGIN_H
 #define PROCEDURAL_ANIMATION_PLAYER_EDITOR_PLUGIN_H
 
-#include "scene/gui/box_container.h"
 #include "editor/editor_plugin.h"
+#include "scene/gui/box_container.h"
 
-#include "procedural_animation_player.h"
 #include "core/core_string_names.h"
+#include "procedural_animation_player.h"
+
+#include "scene/gui/menu_button.h"
+
+class ProceduralAnimationEditor;
 
 class ProceduralAnimationPlayerEditor : public VBoxContainer {
 	GDCLASS(ProceduralAnimationPlayerEditor, VBoxContainer);
@@ -40,11 +44,24 @@ public:
 	~ProceduralAnimationPlayerEditor();
 
 protected:
+	void _notification(int p_what);
 	static void _bind_methods();
 
 private:
 	int _selected_category;
 	int _selected_animation;
+
+	OptionButton *_category_option_button;
+	OptionButton *_animation_option_button;
+
+	Button *_stop;
+	Button *_play;
+	Button *_play_from;
+	Button *_play_bw;
+	Button *_play_bw_from;
+	ToolButton *_pin;
+
+	ProceduralAnimationEditor *_animation_editor;
 
 	ProceduralAnimationPlayer *_animation_player;
 };
