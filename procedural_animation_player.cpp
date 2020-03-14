@@ -22,6 +22,24 @@ SOFTWARE.
 
 #include "procedural_animation_player.h"
 
+Ref<ProceduralAnimation> ProceduralAnimationPlayer::get_animation() {
+	return _animation;
+}
+void ProceduralAnimationPlayer::set_animation(const Ref<ProceduralAnimation> &animation) {
+	_animation = animation;
+}
+
 void ProceduralAnimationPlayer::play(const StringName &p_name, float p_custom_blend, float p_custom_scale, bool p_from_end) {
-	print_error("adada");
+}
+
+ProceduralAnimationPlayer::ProceduralAnimationPlayer() {
+}
+ProceduralAnimationPlayer::~ProceduralAnimationPlayer() {
+	_animation.unref();
+}
+
+void ProceduralAnimationPlayer::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("get_animation"), &ProceduralAnimationPlayer::get_animation);
+	ClassDB::bind_method(D_METHOD("set_animation", "value"), &ProceduralAnimationPlayer::set_animation);
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "animation", PROPERTY_HINT_RESOURCE_TYPE, "ProceduralAnimation"), "set_animation", "get_animation");
 }

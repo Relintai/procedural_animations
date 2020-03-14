@@ -30,6 +30,12 @@ void ProceduralAnimationEditor::edit(const Ref<ProceduralAnimation> &animation) 
 	_selected_category = -1;
 	_selected_animation = -1;
 
+	_stop->hide();
+	_play->hide();
+	_play_from->hide();
+	_play_bw->hide();
+	_play_bw_from->hide();
+
 	clear_keyframe_nodes();
 	refresh_option_buttons();
 }
@@ -39,6 +45,17 @@ void ProceduralAnimationEditor::edit(ProceduralAnimationPlayer *player) {
 
 	_selected_category = -1;
 	_selected_animation = -1;
+
+	_stop->show();
+	_play->show();
+	_play_from->show();
+	_play_bw->show();
+	_play_bw_from->show();
+
+	_animation = player->get_animation();
+
+	clear_keyframe_nodes();
+	refresh_option_buttons();
 }
 
 void ProceduralAnimationEditor::load_selected_animation() {
@@ -684,6 +701,7 @@ void ProceduralAnimationEditorPlugin::edit(Object *p_object) {
 		animation_editor->edit(Object::cast_to<ProceduralAnimationPlayer>(p_object));
 		animation_editor_button->show();
 	} else {
+		animation_editor_button->set_pressed(false);
 		animation_editor_button->hide();
 	}
 }
@@ -698,8 +716,7 @@ bool ProceduralAnimationEditorPlugin::handles(Object *p_object) const {
 		if (player)
 			animation_editor_button->set_pressed(true);
 	} else {
-		if (player)
-			animation_editor_button->set_pressed(false);
+		animation_editor_button->set_pressed(false);
 
 		animation_editor_button->hide();
 	}

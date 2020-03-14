@@ -25,11 +25,25 @@ SOFTWARE.
 
 #include "scene/main/node.h"
 
+#include "procedural_animation.h"
+
 class ProceduralAnimationPlayer : public Node {
 	GDCLASS(ProceduralAnimationPlayer, Node);
 
 public:
+	Ref<ProceduralAnimation> get_animation();
+	void set_animation(const Ref<ProceduralAnimation> &animation);
+
 	void play(const StringName &p_name = StringName(), float p_custom_blend = -1, float p_custom_scale = 1.0, bool p_from_end = false);
+
+	ProceduralAnimationPlayer();
+	~ProceduralAnimationPlayer();
+
+protected:
+	static void _bind_methods();
+
+private:
+	Ref<ProceduralAnimation> _animation;
 };
 
 #endif
