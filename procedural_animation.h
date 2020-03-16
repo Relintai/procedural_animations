@@ -177,6 +177,7 @@ public:
 	PoolVector<int> get_category_indices() const;
 	int add_category(const String &name);
 	void remove_category(const int index);
+	bool has_category(const int index) const;
 
 	String get_category_name(const int category_index) const;
 	void set_category_name(const int category_index, const String &value);
@@ -185,8 +186,9 @@ public:
 	PoolVector<int> get_animation_indices(const int category_index) const;
 	int add_animation(const int category_index);
 	void remove_animation(const int category_index, const int animation_index);
+	bool has_animation(const int category_index, const int animation_index) const;
 
-	String get_animation_name(const int category_index, const int animation_index);
+	String get_animation_name(const int category_index, const int animation_index) const;
 	void set_animation_name(const int category_index, const int animation_index, const String &value);
 
 	Vector2 get_animation_node_position(const int category_index, int animation_index) const;
@@ -199,8 +201,9 @@ public:
 	PoolVector<int> get_keyframe_indices(const int category_index, const int animation_index) const;
 	int add_keyframe(const int category_index, const int animation_index);
 	void remove_keyframe(const int category_index, const int animation_index, const int keyframe_index);
+	bool has_keyframe(const int category_index, const int animation_index, const int keyframe_index) const;
 
-	String get_keyframe_name(const int category_index, const int animation_index, const int keyframe_index);
+	String get_keyframe_name(const int category_index, const int animation_index, const int keyframe_index) const;
 	void set_keyframe_name(const int category_index, const int animation_index, const int keyframe_index, const String &value);
 
 	int get_keyframe_animation_keyframe_index(const int category_index, int animation_index, const int keyframe_index) const;

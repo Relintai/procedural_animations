@@ -106,6 +106,10 @@ void ProceduralAnimation::remove_category(const int index) {
 	memdelete(category);
 }
 
+bool ProceduralAnimation::has_category(const int index) const {
+	return _categories.has(index);
+}
+
 String ProceduralAnimation::get_category_name(const int category_index) const {
 	ERR_FAIL_COND_V(!_categories.has(category_index), "");
 
@@ -167,7 +171,16 @@ void ProceduralAnimation::remove_animation(const int category_index, const int a
 	memdelete(entry);
 }
 
-String ProceduralAnimation::get_animation_name(const int category_index, const int animation_index) {
+bool ProceduralAnimation::has_animation(const int category_index, const int animation_index) const {
+	if (!_categories.has(category_index))
+		return false;
+
+	Category *cat = _categories[category_index];
+
+	return cat->animations.has(animation_index);
+}
+
+String ProceduralAnimation::get_animation_name(const int category_index, const int animation_index) const {
 	ERR_FAIL_COND_V(!_categories.has(category_index), "");
 
 	Category *cat = _categories[category_index];
@@ -286,7 +299,21 @@ void ProceduralAnimation::remove_keyframe(const int category_index, const int an
 	memdelete(entry);
 }
 
-String ProceduralAnimation::get_keyframe_name(const int category_index, const int animation_index, const int keyframe_index) {
+bool ProceduralAnimation::has_keyframe(const int category_index, const int animation_index, const int keyframe_index) const {
+	if (!_categories.has(category_index))
+		return false;
+
+	Category *cat = _categories[category_index];
+
+	if (!cat->animations.has(animation_index))
+		return false;
+
+	AnimationEntry *ae = cat->animations[animation_index];
+
+	return ae->keyframes.has(keyframe_index);
+}
+
+String ProceduralAnimation::get_keyframe_name(const int category_index, const int animation_index, const int keyframe_index) const {
 	ERR_FAIL_COND_V(!_categories.has(category_index), "");
 
 	Category *cat = _categories[category_index];
@@ -1095,6 +1122,7 @@ void ProceduralAnimation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_category_indices"), &ProceduralAnimation::get_category_indices);
 	ClassDB::bind_method(D_METHOD("add_category", "name"), &ProceduralAnimation::add_category);
 	ClassDB::bind_method(D_METHOD("remove_category", "index"), &ProceduralAnimation::remove_category);
+	ClassDB::bind_method(D_METHOD("has_category", "index"), &ProceduralAnimation::has_category);
 
 	ClassDB::bind_method(D_METHOD("get_category_name", "category_index"), &ProceduralAnimation::get_category_name);
 	ClassDB::bind_method(D_METHOD("set_category_name", "category_index"), &ProceduralAnimation::set_category_name);
@@ -1103,6 +1131,7 @@ void ProceduralAnimation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_animation_indices", "category_index"), &ProceduralAnimation::get_animation_indices);
 	ClassDB::bind_method(D_METHOD("add_animation", "category_index"), &ProceduralAnimation::add_animation);
 	ClassDB::bind_method(D_METHOD("remove_animation", "category_index", "animation_index"), &ProceduralAnimation::remove_animation);
+	ClassDB::bind_method(D_METHOD("has_animation", "category_index", "animation_index"), &ProceduralAnimation::has_animation);
 
 	ClassDB::bind_method(D_METHOD("get_animation_name", "category_index", "animation_index"), &ProceduralAnimation::get_animation_name);
 	ClassDB::bind_method(D_METHOD("set_animation_name", "category_index", "animation_index", "value"), &ProceduralAnimation::set_animation_name);
@@ -1117,6 +1146,7 @@ void ProceduralAnimation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_keyframe_indices", "category_index", "animation_index"), &ProceduralAnimation::get_keyframe_indices);
 	ClassDB::bind_method(D_METHOD("add_keyframe", "category_index", "animation_index"), &ProceduralAnimation::add_keyframe);
 	ClassDB::bind_method(D_METHOD("remove_keyframe", "category_index", "animation_index", "keyframe_index"), &ProceduralAnimation::remove_keyframe);
+	ClassDB::bind_method(D_METHOD("has_keyframe", "category_index", "animation_index", "keyframe_index"), &ProceduralAnimation::has_keyframe);
 
 	ClassDB::bind_method(D_METHOD("get_keyframe_name", "category_index", "animation_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_name);
 	ClassDB::bind_method(D_METHOD("set_keyframe_name", "category_index", "animation_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_name);

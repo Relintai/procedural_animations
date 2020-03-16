@@ -25,6 +25,8 @@ SOFTWARE.
 
 #include "scene/main/node.h"
 
+#include "core/string_name.h"
+
 #include "procedural_animation.h"
 
 class ProceduralAnimationPlayer : public Node {
@@ -34,16 +36,25 @@ public:
 	Ref<ProceduralAnimation> get_animation();
 	void set_animation(const Ref<ProceduralAnimation> &animation);
 
+	int get_current_category() const;
+	void set_current_category(const int p_category);
+
+	int get_current_animation() const;
+	void set_current_animation(const int p_animation);
+
 	void play(const StringName &p_name = StringName(), float p_custom_blend = -1, float p_custom_scale = 1.0, bool p_from_end = false);
 
 	ProceduralAnimationPlayer();
 	~ProceduralAnimationPlayer();
 
 protected:
+	void _validate_property(PropertyInfo &property) const;
 	static void _bind_methods();
 
 private:
 	Ref<ProceduralAnimation> _animation;
+	int _current_category;
+	int _current_animation;
 };
 
 #endif
