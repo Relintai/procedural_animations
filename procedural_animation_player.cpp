@@ -43,12 +43,47 @@ void ProceduralAnimationPlayer::set_current_animation(const int p_animation) {
 	_current_animation = p_animation;
 }
 
-void ProceduralAnimationPlayer::play(const StringName &p_name, float p_custom_blend, float p_custom_scale, bool p_from_end) {
+int ProceduralAnimationPlayer::get_curent_keyframe() const {
+	return _curent_keyframe;
+}
+void ProceduralAnimationPlayer::set_curent_keyframe(const int p_keyframe) {
+	_curent_keyframe = p_keyframe;
+}
+
+float ProceduralAnimationPlayer::get_scale() const {
+	return _scale;
+}
+void ProceduralAnimationPlayer::set_scale(const float p_scale) {
+	_scale = p_scale;
+}
+
+bool ProceduralAnimationPlayer::is_playing() const {
+	return _playing;
+}
+
+void ProceduralAnimationPlayer::play() {
+	if (_playing)
+		return;
+
+	_playing = true;
+}
+void ProceduralAnimationPlayer::stop() {
+	if (!_playing)
+		return;
+
+	_playing = false;
+}
+void ProceduralAnimationPlayer::setup_frame() {
+}
+void ProceduralAnimationPlayer::advance(float p_delta) {
 }
 
 ProceduralAnimationPlayer::ProceduralAnimationPlayer() {
 	_current_category = 0;
 	_current_animation = 0;
+	_curent_keyframe = 0;
+	_scale = 1.0;
+	_playing = false;
 }
 ProceduralAnimationPlayer::~ProceduralAnimationPlayer() {
 	_animation.unref();
@@ -107,9 +142,24 @@ void ProceduralAnimationPlayer::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("get_current_category"), &ProceduralAnimationPlayer::get_current_category);
 	ClassDB::bind_method(D_METHOD("set_current_category", "category"), &ProceduralAnimationPlayer::set_current_category);
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "current_category"), "set_current_category", "get_current_category");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_category"), "set_current_category", "get_current_category");
 
 	ClassDB::bind_method(D_METHOD("get_current_animation"), &ProceduralAnimationPlayer::get_current_animation);
 	ClassDB::bind_method(D_METHOD("set_current_animation", "animation"), &ProceduralAnimationPlayer::set_current_animation);
-	ADD_PROPERTY(PropertyInfo(Variant::STRING, "current_animation"), "set_current_animation", "get_current_animation");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_animation"), "set_current_animation", "get_current_animation");
+
+	ClassDB::bind_method(D_METHOD("get_curent_keyframe"), &ProceduralAnimationPlayer::get_curent_keyframe);
+	ClassDB::bind_method(D_METHOD("set_curent_keyframe", "animation"), &ProceduralAnimationPlayer::set_curent_keyframe);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "curent_keyframe"), "set_curent_keyframe", "get_curent_keyframe");
+
+	ClassDB::bind_method(D_METHOD("get_scale"), &ProceduralAnimationPlayer::get_scale);
+	ClassDB::bind_method(D_METHOD("set_scale", "animation"), &ProceduralAnimationPlayer::set_scale);
+	ADD_PROPERTY(PropertyInfo(Variant::REAL, "scale"), "set_scale", "get_scale");
+
+	ClassDB::bind_method(D_METHOD("is_playing"), &ProceduralAnimationPlayer::is_playing);
+
+	ClassDB::bind_method(D_METHOD("play"), &ProceduralAnimationPlayer::play);
+	ClassDB::bind_method(D_METHOD("stop"), &ProceduralAnimationPlayer::stop);
+	ClassDB::bind_method(D_METHOD("setup_frame"), &ProceduralAnimationPlayer::setup_frame);
+	ClassDB::bind_method(D_METHOD("advance", "delta"), &ProceduralAnimationPlayer::advance);
 }

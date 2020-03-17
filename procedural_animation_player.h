@@ -42,7 +42,18 @@ public:
 	int get_current_animation() const;
 	void set_current_animation(const int p_animation);
 
-	void play(const StringName &p_name = StringName(), float p_custom_blend = -1, float p_custom_scale = 1.0, bool p_from_end = false);
+	int get_curent_keyframe() const;
+	void set_curent_keyframe(const int p_keyframe);
+
+	float get_scale() const;
+	void set_scale(const float p_scale);
+
+	bool is_playing() const;
+
+	void play();
+	void stop();
+	void setup_frame();
+	void advance(float p_delta);
 
 	ProceduralAnimationPlayer();
 	~ProceduralAnimationPlayer();
@@ -55,6 +66,9 @@ private:
 	Ref<ProceduralAnimation> _animation;
 	int _current_category;
 	int _current_animation;
+	int _curent_keyframe;
+	float _scale;
+	bool _playing;
 };
 
 #endif
