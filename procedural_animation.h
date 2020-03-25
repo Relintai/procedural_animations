@@ -149,6 +149,12 @@ public:
 	int get_start_frame_index() const;
 	void set_start_frame_index(const int value);
 
+	void set_length(float p_length);
+	float get_length() const;
+
+	void set_loop(bool p_enabled);
+	bool has_loop() const;
+
 	//Keyframes
 	PoolVector<int> get_keyframe_indices() const;
 	int add_keyframe();
@@ -172,6 +178,42 @@ public:
 
 	void initialize();
 	void load_keyframe_data(int keyframe_index);
+
+	float track_get_key_time(int p_track, int p_key_idx) const;
+	float track_get_key_transition(int p_track, int p_key_idx) const;
+	Variant track_get_key_value(int p_track, int p_key_idx) const;
+
+	void get_key_indices(int p_track, float p_time, float p_delta, List<int> *p_indices) const;
+	void track_get_key_indices_in_range(int p_track, float p_time, float p_delta, List<int> *p_indices) const;
+
+	int track_find_key(int p_track, float p_time, bool p_exact = false) const;
+
+	Vector<Variant> method_track_get_params(int p_track, int p_key_idx) const;
+	StringName method_track_get_name(int p_track, int p_key_idx) const;
+
+	RES audio_track_get_key_stream(int p_track, int p_key) const;
+	float audio_track_get_key_start_offset(int p_track, int p_key) const;
+	float audio_track_get_key_end_offset(int p_track, int p_key) const;
+
+	StringName animation_track_get_key_animation(int p_track, int p_key) const;
+
+	//Interpolations
+	Error transform_track_interpolate(int p_track, float p_time, Vector3 *r_loc, Quat *r_rot, Vector3 *r_scale) const;
+	Variant value_track_interpolate(int p_track, float p_time) const;
+	float bezier_track_interpolate(int p_track, float p_time) const;
+
+	//Animation forwards
+	int get_track_count() const;
+	Animation::TrackType track_get_type(int p_track) const;
+
+	NodePath track_get_path(int p_track) const;
+	int find_track(const NodePath &p_path) const;
+
+	bool track_is_enabled(int p_track) const;
+
+	int track_get_key_count(int p_track) const;
+
+	Animation::UpdateMode value_track_get_update_mode(int p_track) const;
 
 	ProceduralAnimation();
 	~ProceduralAnimation();
@@ -202,6 +244,8 @@ protected:
 private:
 	bool _initialized;
 	int _animation_fps;
+	float _length;
+	bool _loop;
 
 	String _editor_add_category_name;
 	String _add_editor_category_animation_name;
