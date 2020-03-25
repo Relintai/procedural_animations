@@ -67,105 +67,36 @@ PoolVector<String> ProceduralAnimation::get_animation_keyframe_names() const {
 	return names;
 }
 
-//Animations
-PoolVector<int> ProceduralAnimation::get_animation_indices() const {
-	PoolVector<int> idxr;
-	idxr.resize(_animations.size());
-
-	int i = 0;
-	for (Map<int, AnimationEntry *>::Element *E = _animations.front(); E; E = E->next()) {
-		idxr.set(i, E->key());
-		++i;
-	}
-
-	return idxr;
+Vector2 ProceduralAnimation::get_start_node_position() const {
+	return _start_node_position;
 }
-int ProceduralAnimation::add_animation() {
-	int key = -1;
-	for (Map<int, AnimationEntry *>::Element *E = _animations.front(); E; E = E->next()) {
-		if (E->key() > key) {
-			key = E->key();
-		}
-	}
-	++key;
-
-	AnimationEntry *entry = memnew(AnimationEntry);
-
-	_animations[key] = entry;
-
-	return key;
-}
-void ProceduralAnimation::remove_animation(const int animation_index) {
-	ERR_FAIL_COND(!_animations.has(animation_index));
-
-	AnimationEntry *entry = _animations[animation_index];
-
-	_animations.erase(animation_index);
-
-	memdelete(entry);
+void ProceduralAnimation::set_start_node_position(const Vector2 &value) {
+	_start_node_position = value;
 }
 
-bool ProceduralAnimation::has_animation(const int animation_index) const {
-	return _animations.has(animation_index);
+int ProceduralAnimation::get_start_frame_index() const {
+	return _start_frame_index;
 }
-
-String ProceduralAnimation::get_animation_name(const int animation_index) const {
-	ERR_FAIL_COND_V(!_animations.has(animation_index), "");
-
-	return _animations[animation_index]->name;
-}
-void ProceduralAnimation::set_animation_name(const int animation_index, const String &value) {
-	ERR_FAIL_COND(!_animations.has(animation_index));
-
-	_animations[animation_index]->name = value;
-}
-
-Vector2 ProceduralAnimation::get_animation_node_position(int animation_index) const {
-	ERR_FAIL_COND_V(!_animations.has(animation_index), Vector2());
-
-	return _animations[animation_index]->position;
-}
-void ProceduralAnimation::set_animation_node_position(const int animation_index, const Vector2 &value) {
-	ERR_FAIL_COND(!_animations.has(animation_index));
-
-	_animations[animation_index]->position = value;
-}
-
-int ProceduralAnimation::get_animation_start_frame_index(const int animation_index) const {
-	ERR_FAIL_COND_V(!_animations.has(animation_index), 0);
-
-	return _animations[animation_index]->start_frame_index;
-}
-void ProceduralAnimation::set_animation_start_frame_index(const int animation_index, const int value) {
-	ERR_FAIL_COND(!_animations.has(animation_index));
-
-	_animations[animation_index]->start_frame_index = value;
+void ProceduralAnimation::set_start_frame_index(const int value) {
+	_start_frame_index = value;
 }
 
 //Keyframes
-PoolVector<int> ProceduralAnimation::get_keyframe_indices(const int animation_index) const {
-	ERR_FAIL_COND_V(!_animations.has(animation_index), PoolVector<int>());
-
-	AnimationEntry *ae = _animations[animation_index];
-
+PoolVector<int> ProceduralAnimation::get_keyframe_indices() const {
 	PoolVector<int> idxr;
-	idxr.resize(ae->keyframes.size());
+	idxr.resize(_keyframes.size());
 
 	int i = 0;
-	for (Map<int, AnimationKeyFrame *>::Element *E = ae->keyframes.front(); E; E = E->next()) {
+	for (Map<int, AnimationKeyFrame *>::Element *E = _keyframes.front(); E; E = E->next()) {
 		idxr.set(i, E->key());
 		++i;
 	}
 
 	return idxr;
 }
-int ProceduralAnimation::add_keyframe(const int animation_index) {
-	ERR_FAIL_COND_V(!_animations.has(animation_index), 0);
-
-	AnimationEntry *ae = _animations[animation_index];
-
+int ProceduralAnimation::add_keyframe() {
 	int key = -1;
-	for (Map<int, AnimationKeyFrame *>::Element *E = ae->keyframes.front(); E; E = E->next()) {
+	for (Map<int, AnimationKeyFrame *>::Element *E = _keyframes.front(); E; E = E->next()) {
 		if (E->key() > key) {
 			key = E->key();
 		}
@@ -174,126 +105,77 @@ int ProceduralAnimation::add_keyframe(const int animation_index) {
 
 	AnimationKeyFrame *entry = memnew(AnimationKeyFrame);
 
-	ae->keyframes[key] = entry;
+	_keyframes[key] = entry;
 
 	return key;
 }
-void ProceduralAnimation::remove_keyframe(const int animation_index, const int keyframe_index) {
-	ERR_FAIL_COND(!_animations.has(animation_index));
+void ProceduralAnimation::remove_keyframe(const int keyframe_index) {
+	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
 
-	AnimationEntry *ae = _animations[animation_index];
+	AnimationKeyFrame *entry = _keyframes[keyframe_index];
 
-	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
-
-	AnimationKeyFrame *entry = ae->keyframes[keyframe_index];
-
-	_animations.erase(keyframe_index);
+	_keyframes.erase(keyframe_index);
 
 	memdelete(entry);
 }
 
-bool ProceduralAnimation::has_keyframe(const int animation_index, const int keyframe_index) const {
-	if (!_animations.has(animation_index))
-		return false;
-
-	AnimationEntry *ae = _animations[animation_index];
-
-	return ae->keyframes.has(keyframe_index);
+bool ProceduralAnimation::has_keyframe(const int keyframe_index) const {
+	return _keyframes.has(keyframe_index);
 }
 
-String ProceduralAnimation::get_keyframe_name(const int animation_index, const int keyframe_index) const {
-	ERR_FAIL_COND_V(!_animations.has(animation_index), "");
+String ProceduralAnimation::get_keyframe_name(const int keyframe_index) const {
+	ERR_FAIL_COND_V(!_keyframes.has(keyframe_index), "");
 
-	AnimationEntry *ae = _animations[animation_index];
-
-	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), "");
-
-	return ae->keyframes[keyframe_index]->name;
+	return _keyframes[keyframe_index]->name;
 }
-void ProceduralAnimation::set_keyframe_name(const int animation_index, const int keyframe_index, const String &value) {
-	ERR_FAIL_COND(!_animations.has(animation_index));
+void ProceduralAnimation::set_keyframe_name(const int keyframe_index, const String &value) {
+	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
 
-	AnimationEntry *ae = _animations[animation_index];
-
-	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
-
-	ae->keyframes[keyframe_index]->name = value;
+	_keyframes[keyframe_index]->name = value;
 }
 
-int ProceduralAnimation::get_keyframe_animation_keyframe_index(int animation_index, const int keyframe_index) const {
-	ERR_FAIL_COND_V(!_animations.has(animation_index), 0);
+int ProceduralAnimation::get_keyframe_animation_keyframe_index(const int keyframe_index) const {
+	ERR_FAIL_COND_V(!_keyframes.has(keyframe_index), 0);
 
-	AnimationEntry *ae = _animations[animation_index];
-
-	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), 0);
-
-	return ae->keyframes[keyframe_index]->animation_keyframe_index;
+	return _keyframes[keyframe_index]->animation_keyframe_index;
 }
-void ProceduralAnimation::set_keyframe_animation_keyframe_index(int animation_index, const int keyframe_index, int value) {
-	ERR_FAIL_COND(!_animations.has(animation_index));
+void ProceduralAnimation::set_keyframe_animation_keyframe_index(const int keyframe_index, int value) {
+	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
 
-	AnimationEntry *ae = _animations[animation_index];
-
-	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
-
-	ae->keyframes[keyframe_index]->animation_keyframe_index = value;
+	_keyframes[keyframe_index]->animation_keyframe_index = value;
 }
 
-int ProceduralAnimation::get_keyframe_next_keyframe_index(const int animation_index, const int keyframe_index) const {
-	ERR_FAIL_COND_V(!_animations.has(animation_index), 0);
+int ProceduralAnimation::get_keyframe_next_keyframe_index(const int keyframe_index) const {
+	ERR_FAIL_COND_V(!_keyframes.has(keyframe_index), 0);
 
-	AnimationEntry *ae = _animations[animation_index];
-
-	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), 0);
-
-	return ae->keyframes[keyframe_index]->next_keyframe;
+	return _keyframes[keyframe_index]->next_keyframe;
 }
-void ProceduralAnimation::set_keyframe_next_keyframe_index(const int animation_index, const int keyframe_index, const int value) {
-	ERR_FAIL_COND(!_animations.has(animation_index));
+void ProceduralAnimation::set_keyframe_next_keyframe_index(const int keyframe_index, const int value) {
+	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
 
-	AnimationEntry *ae = _animations[animation_index];
-
-	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
-
-	ae->keyframes[keyframe_index]->next_keyframe = value;
+	_keyframes[keyframe_index]->next_keyframe = value;
 }
 
-Ref<Curve> ProceduralAnimation::get_keyframe_in_curve(const int animation_index, const int keyframe_index) const {
-	ERR_FAIL_COND_V(!_animations.has(animation_index), Ref<Curve>());
+Ref<Curve> ProceduralAnimation::get_keyframe_in_curve(const int keyframe_index) const {
+	ERR_FAIL_COND_V(!_keyframes.has(keyframe_index), Ref<Curve>());
 
-	AnimationEntry *ae = _animations[animation_index];
-
-	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), Ref<Curve>());
-
-	return ae->keyframes[keyframe_index]->in_curve;
+	return _keyframes[keyframe_index]->in_curve;
 }
-void ProceduralAnimation::set_keyframe_in_curve(const int animation_index, const int keyframe_index, const Ref<Curve> &value) {
-	ERR_FAIL_COND(!_animations.has(animation_index));
+void ProceduralAnimation::set_keyframe_in_curve(const int keyframe_index, const Ref<Curve> &value) {
+	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
 
-	AnimationEntry *ae = _animations[animation_index];
-
-	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
-
-	ae->keyframes[keyframe_index]->in_curve = value;
+	_keyframes[keyframe_index]->in_curve = value;
 }
 
-Vector2 ProceduralAnimation::get_keyframe_node_position(int animation_index, const int keyframe_index) const {
-	ERR_FAIL_COND_V(!_animations.has(animation_index), Vector2());
+Vector2 ProceduralAnimation::get_keyframe_node_position(const int keyframe_index) const {
+	ERR_FAIL_COND_V(!_keyframes.has(keyframe_index), Vector2());
 
-	AnimationEntry *ae = _animations[animation_index];
-
-	ERR_FAIL_COND_V(!ae->keyframes.has(keyframe_index), Vector2());
-
-	return ae->keyframes[keyframe_index]->position;
+	return _keyframes[keyframe_index]->position;
 }
-void ProceduralAnimation::set_keyframe_node_position(const int animation_index, const int keyframe_index, const Vector2 &value) {
-	ERR_FAIL_COND(!_animations.has(animation_index));
+void ProceduralAnimation::set_keyframe_node_position(const int keyframe_index, const Vector2 &value) {
+	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
 
-	AnimationEntry *ae = _animations[animation_index];
-
-	ERR_FAIL_COND(!ae->keyframes.has(keyframe_index));
-
-	ae->keyframes[keyframe_index]->position = value;
+	_keyframes[keyframe_index]->position = value;
 }
 
 void ProceduralAnimation::initialize() {
@@ -307,15 +189,11 @@ void ProceduralAnimation::initialize() {
 
 	_animation_data.clear();
 
-	for (Map<int, AnimationEntry *>::Element *A = _animations.front(); A; A = A->next()) {
-		AnimationEntry *anim_entry = A->get();
+	for (Map<int, AnimationKeyFrame *>::Element *K = _keyframes.front(); K; K = K->next()) {
+		int keyframe_index = K->get()->animation_keyframe_index;
 
-		for (Map<int, AnimationKeyFrame *>::Element *K = anim_entry->keyframes.front(); K; K = K->next()) {
-			int keyframe_index = K->get()->animation_keyframe_index;
-
-			if (!_animation_data.has(keyframe_index))
-				load_keyframe_data(keyframe_index);
-		}
+		if (!_animation_data.has(keyframe_index))
+			load_keyframe_data(keyframe_index);
 	}
 }
 
@@ -397,12 +275,11 @@ void ProceduralAnimation::load_keyframe_data(int keyframe_index) {
 ProceduralAnimation::ProceduralAnimation() {
 	_initialized = false;
 	_animation_fps = 15;
+	_start_frame_index = -1;
 }
 
 ProceduralAnimation::~ProceduralAnimation() {
-	Map<int, AnimationEntry *> animations;
-
-	for (Map<int, AnimationEntry *>::Element *E = _animations.front(); E; E = E->next())
+	for (Map<int, AnimationKeyFrame *>::Element *E = _keyframes.front(); E; E = E->next())
 		memdelete(E->get());
 
 	for (Map<int, Vector<AnimationKey> *>::Element *E = _animation_data.front(); E; E = E->next()) {
@@ -412,7 +289,7 @@ ProceduralAnimation::~ProceduralAnimation() {
 	}
 
 	_animation_data.clear();
-	_animations.clear();
+	_keyframes.clear();
 
 	_animation.unref();
 }
@@ -760,65 +637,46 @@ Variant ProceduralAnimation::value_track_interpolate(int p_track, float p_time) 
 bool ProceduralAnimation::_set(const StringName &p_name, const Variant &p_value) {
 	String name = p_name;
 
-	if (name.begins_with("animation/")) {
-		int animation_index = name.get_slicec('/', 1).to_int();
-		String anim_prop_name = name.get_slicec('/', 2);
+	if (name == "start_node_position") {
+		_start_node_position = p_value;
 
-		if (!_animations.has(animation_index)) {
-			AnimationEntry *ae = memnew(AnimationEntry);
+		return true;
+	} else if (name == "start_frame_index") {
+		_start_frame_index = p_value;
 
-			_animations[animation_index] = ae;
+		return true;
+	} else if (name == "keyframe") {
+		int keyframe_index = name.get_slicec('/', 1).to_int();
+		String keyframe_name = name.get_slicec('/', 2);
+
+		if (!_keyframes.has(keyframe_index)) {
+			AnimationKeyFrame *keyframe = memnew(AnimationKeyFrame);
+
+			_keyframes[keyframe_index] = keyframe;
 		}
 
-		AnimationEntry *ae = _animations[animation_index];
+		AnimationKeyFrame *keyframe = _keyframes[keyframe_index];
 
-		if (anim_prop_name == "name") {
-			ae->name = p_value;
-
-			return true;
-		} else if (anim_prop_name == "position") {
-			ae->position = p_value;
+		if (keyframe_name == "name") {
+			keyframe->name = p_value;
 
 			return true;
-		} else if (anim_prop_name == "start_frame_index") {
-			ae->start_frame_index = p_value;
+		} else if (keyframe_name == "animation_keyframe_index") {
+			keyframe->animation_keyframe_index = p_value;
 
 			return true;
-		} else if (anim_prop_name == "keyframe") {
-			int keyframe_index = name.get_slicec('/', 5).to_int();
-			String keyframe_name = name.get_slicec('/', 6);
+		} else if (keyframe_name == "next_keyframe") {
+			keyframe->next_keyframe = p_value;
 
-			if (!ae->keyframes.has(keyframe_index)) {
-				AnimationKeyFrame *keyframe = memnew(AnimationKeyFrame);
+			return true;
+		} else if (keyframe_name == "in_curve") {
+			keyframe->in_curve = p_value;
 
-				ae->keyframes[keyframe_index] = keyframe;
-			}
+			return true;
+		} else if (keyframe_name == "position") {
+			keyframe->position = p_value;
 
-			AnimationKeyFrame *keyframe = ae->keyframes[keyframe_index];
-
-			if (keyframe_name == "name") {
-				keyframe->name = p_value;
-
-				return true;
-			} else if (keyframe_name == "animation_keyframe_index") {
-				keyframe->animation_keyframe_index = p_value;
-
-				return true;
-			} else if (keyframe_name == "next_keyframe") {
-				keyframe->next_keyframe = p_value;
-
-				return true;
-			} else if (keyframe_name == "in_curve") {
-				keyframe->in_curve = p_value;
-
-				return true;
-			} else if (keyframe_name == "position") {
-				keyframe->position = p_value;
-
-				return true;
-			} else {
-				return false;
-			}
+			return true;
 		} else {
 			return false;
 		}
@@ -832,53 +690,40 @@ bool ProceduralAnimation::_set(const StringName &p_name, const Variant &p_value)
 bool ProceduralAnimation::_get(const StringName &p_name, Variant &r_ret) const {
 	String name = p_name;
 
-	if (name.begins_with("animation/")) {
-		int animation_index = name.get_slicec('/', 1).to_int();
-		String anim_prop_name = name.get_slicec('/', 2);
+	if (name == "start_node_position") {
+		r_ret = _start_node_position;
 
-		AnimationEntry *anim = _animations[animation_index];
+		return true;
+	} else if (name == "start_frame_index") {
+		r_ret = _start_frame_index;
 
-		if (anim_prop_name == "name") {
-			r_ret = anim->name;
+		return true;
+	} else if (name == "keyframe") {
+		int keyframe_index = name.get_slicec('/', 1).to_int();
+		String keyframe_prop_name = name.get_slicec('/', 2);
+
+		AnimationKeyFrame *keyframe = _keyframes[keyframe_index];
+
+		if (keyframe_prop_name == "name") {
+			r_ret = keyframe->name;
 
 			return true;
-		} else if (anim_prop_name == "position") {
-			r_ret = anim->position;
+		} else if (keyframe_prop_name == "animation_keyframe_index") {
+			r_ret = keyframe->animation_keyframe_index;
 
 			return true;
-		} else if (anim_prop_name == "start_frame_index") {
-			r_ret = anim->start_frame_index;
+		} else if (keyframe_prop_name == "next_keyframe") {
+			r_ret = keyframe->next_keyframe;
 
 			return true;
-		} else if (anim_prop_name == "keyframe") {
-			int keyframe_index = name.get_slicec('/', 5).to_int();
-			String keyframe_prop_name = name.get_slicec('/', 6);
+		} else if (keyframe_prop_name == "in_curve") {
+			r_ret = keyframe->in_curve;
 
-			AnimationKeyFrame *keyframe = anim->keyframes[keyframe_index];
+			return true;
+		} else if (keyframe_prop_name == "position") {
+			r_ret = keyframe->position;
 
-			if (keyframe_prop_name == "name") {
-				r_ret = keyframe->name;
-
-				return true;
-			} else if (keyframe_prop_name == "animation_keyframe_index") {
-				r_ret = keyframe->animation_keyframe_index;
-
-				return true;
-			} else if (keyframe_prop_name == "next_keyframe") {
-				r_ret = keyframe->next_keyframe;
-
-				return true;
-			} else if (keyframe_prop_name == "in_curve") {
-				r_ret = keyframe->in_curve;
-
-				return true;
-			} else if (keyframe_prop_name == "position") {
-				r_ret = keyframe->position;
-
-				return true;
-			} else {
-				return false;
-			}
+			return true;
 		} else {
 			return false;
 		}
@@ -893,20 +738,15 @@ void ProceduralAnimation::_get_property_list(List<PropertyInfo> *p_list) const {
 	//int property_usange = PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_INTERNAL;
 	int property_usange = PROPERTY_USAGE_DEFAULT;
 
-	for (Map<int, AnimationEntry *>::Element *A = _animations.front(); A; A = A->next()) {
-		AnimationEntry *animation = A->get();
+	p_list->push_back(PropertyInfo(Variant::VECTOR2, "position", PROPERTY_HINT_NONE, "", property_usange));
+	p_list->push_back(PropertyInfo(Variant::INT, "start_frame_index", PROPERTY_HINT_NONE, "", property_usange));
 
-		p_list->push_back(PropertyInfo(Variant::STRING, "animation/" + itos(A->key()) + "/name", PROPERTY_HINT_NONE, "", property_usange));
-		p_list->push_back(PropertyInfo(Variant::VECTOR2, "animation/" + itos(A->key()) + "/position", PROPERTY_HINT_NONE, "", property_usange));
-		p_list->push_back(PropertyInfo(Variant::INT, "animation/" + itos(A->key()) + "/start_frame_index", PROPERTY_HINT_NONE, "", property_usange));
-
-		for (Map<int, AnimationKeyFrame *>::Element *K = animation->keyframes.front(); K; K = K->next()) {
-			p_list->push_back(PropertyInfo(Variant::STRING, "animation/" + itos(A->key()) + "/keyframe/" + itos(K->key()) + "/name", PROPERTY_HINT_NONE, "", property_usange));
-			p_list->push_back(PropertyInfo(Variant::INT, "animation/" + itos(A->key()) + "/keyframe/" + itos(K->key()) + "/animation_keyframe_index", PROPERTY_HINT_NONE, "", property_usange));
-			p_list->push_back(PropertyInfo(Variant::INT, "animation/" + itos(A->key()) + "/keyframe/" + itos(K->key()) + "/next_keyframe", PROPERTY_HINT_NONE, "", property_usange));
-			p_list->push_back(PropertyInfo(Variant::OBJECT, "animation/" + itos(A->key()) + "/keyframe/" + itos(K->key()) + "/in_curve", PROPERTY_HINT_RESOURCE_TYPE, "Curve", property_usange));
-			p_list->push_back(PropertyInfo(Variant::VECTOR2, "animation/" + itos(A->key()) + "/keyframe/" + itos(K->key()) + "/position", PROPERTY_HINT_NONE, "", property_usange));
-		}
+	for (Map<int, AnimationKeyFrame *>::Element *K = _keyframes.front(); K; K = K->next()) {
+		p_list->push_back(PropertyInfo(Variant::STRING, "keyframe/" + itos(K->key()) + "/name", PROPERTY_HINT_NONE, "", property_usange));
+		p_list->push_back(PropertyInfo(Variant::INT, "keyframe/" + itos(K->key()) + "/animation_keyframe_index", PROPERTY_HINT_NONE, "", property_usange));
+		p_list->push_back(PropertyInfo(Variant::INT, "keyframe/" + itos(K->key()) + "/next_keyframe", PROPERTY_HINT_NONE, "", property_usange));
+		p_list->push_back(PropertyInfo(Variant::OBJECT, "keyframe/" + itos(K->key()) + "/in_curve", PROPERTY_HINT_RESOURCE_TYPE, "Curve", property_usange));
+		p_list->push_back(PropertyInfo(Variant::VECTOR2, "keyframe/" + itos(K->key()) + "/position", PROPERTY_HINT_NONE, "", property_usange));
 	}
 }
 
@@ -924,41 +764,32 @@ void ProceduralAnimation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("remove_animation_keyframe_name", "keyframe_index"), &ProceduralAnimation::remove_animation_keyframe_name);
 	ClassDB::bind_method(D_METHOD("get_animation_keyframe_names"), &ProceduralAnimation::get_animation_keyframe_names);
 
-	//Animations
-	ClassDB::bind_method(D_METHOD("get_animation_indices"), &ProceduralAnimation::get_animation_indices);
-	ClassDB::bind_method(D_METHOD("add_animation"), &ProceduralAnimation::add_animation);
-	ClassDB::bind_method(D_METHOD("remove_animation", "animation_index"), &ProceduralAnimation::remove_animation);
-	ClassDB::bind_method(D_METHOD("has_animation", "animation_index"), &ProceduralAnimation::has_animation);
+	ClassDB::bind_method(D_METHOD("get_start_node_position"), &ProceduralAnimation::get_start_node_position);
+	ClassDB::bind_method(D_METHOD("set_start_node_position", "value"), &ProceduralAnimation::set_start_node_position);
 
-	ClassDB::bind_method(D_METHOD("get_animation_name", "animation_index"), &ProceduralAnimation::get_animation_name);
-	ClassDB::bind_method(D_METHOD("set_animation_name", "animation_index", "value"), &ProceduralAnimation::set_animation_name);
-
-	ClassDB::bind_method(D_METHOD("get_animation_node_position", "animation_index"), &ProceduralAnimation::get_animation_node_position);
-	ClassDB::bind_method(D_METHOD("set_animation_node_position", "animation_index", "value"), &ProceduralAnimation::set_animation_node_position);
-
-	ClassDB::bind_method(D_METHOD("get_animation_start_frame_index", "animation_index"), &ProceduralAnimation::get_animation_start_frame_index);
-	ClassDB::bind_method(D_METHOD("set_animation_start_frame_index", "animation_index", "value"), &ProceduralAnimation::set_animation_start_frame_index);
+	ClassDB::bind_method(D_METHOD("get_start_frame_index"), &ProceduralAnimation::get_start_frame_index);
+	ClassDB::bind_method(D_METHOD("set_start_frame_index", "value"), &ProceduralAnimation::set_start_frame_index);
 
 	//Keyframes
-	ClassDB::bind_method(D_METHOD("get_keyframe_indices", "animation_index"), &ProceduralAnimation::get_keyframe_indices);
-	ClassDB::bind_method(D_METHOD("add_keyframe", "animation_index"), &ProceduralAnimation::add_keyframe);
-	ClassDB::bind_method(D_METHOD("remove_keyframe", "animation_index", "keyframe_index"), &ProceduralAnimation::remove_keyframe);
-	ClassDB::bind_method(D_METHOD("has_keyframe", "animation_index", "keyframe_index"), &ProceduralAnimation::has_keyframe);
+	ClassDB::bind_method(D_METHOD("get_keyframe_indices"), &ProceduralAnimation::get_keyframe_indices);
+	ClassDB::bind_method(D_METHOD("add_keyframe"), &ProceduralAnimation::add_keyframe);
+	ClassDB::bind_method(D_METHOD("remove_keyframe", "keyframe_index"), &ProceduralAnimation::remove_keyframe);
+	ClassDB::bind_method(D_METHOD("has_keyframe", "keyframe_index"), &ProceduralAnimation::has_keyframe);
 
-	ClassDB::bind_method(D_METHOD("get_keyframe_name", "animation_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_name);
-	ClassDB::bind_method(D_METHOD("set_keyframe_name", "animation_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_name);
+	ClassDB::bind_method(D_METHOD("get_keyframe_name", "keyframe_index"), &ProceduralAnimation::get_keyframe_name);
+	ClassDB::bind_method(D_METHOD("set_keyframe_name", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_name);
 
-	ClassDB::bind_method(D_METHOD("get_keyframe_animation_keyframe_index", "animation_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_animation_keyframe_index);
-	ClassDB::bind_method(D_METHOD("set_keyframe_animation_keyframe_index", "animation_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_animation_keyframe_index);
+	ClassDB::bind_method(D_METHOD("get_keyframe_animation_keyframe_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_animation_keyframe_index);
+	ClassDB::bind_method(D_METHOD("set_keyframe_animation_keyframe_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_animation_keyframe_index);
 
-	ClassDB::bind_method(D_METHOD("get_keyframe_next_keyframe_index", "animation_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_next_keyframe_index);
-	ClassDB::bind_method(D_METHOD("set_keyframe_next_keyframe_index", "animation_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_next_keyframe_index);
+	ClassDB::bind_method(D_METHOD("get_keyframe_next_keyframe_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_next_keyframe_index);
+	ClassDB::bind_method(D_METHOD("set_keyframe_next_keyframe_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_next_keyframe_index);
 
-	ClassDB::bind_method(D_METHOD("get_keyframe_in_curve", "animation_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_in_curve);
-	ClassDB::bind_method(D_METHOD("set_keyframe_in_curve", "animation_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_in_curve);
+	ClassDB::bind_method(D_METHOD("get_keyframe_in_curve", "keyframe_index"), &ProceduralAnimation::get_keyframe_in_curve);
+	ClassDB::bind_method(D_METHOD("set_keyframe_in_curve", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_in_curve);
 
-	ClassDB::bind_method(D_METHOD("get_keyframe_node_position", "animation_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_node_position);
-	ClassDB::bind_method(D_METHOD("set_keyframe_node_position", "animation_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_node_position);
+	ClassDB::bind_method(D_METHOD("get_keyframe_node_position", "keyframe_index"), &ProceduralAnimation::get_keyframe_node_position);
+	ClassDB::bind_method(D_METHOD("set_keyframe_node_position", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_node_position);
 
 	ClassDB::bind_method(D_METHOD("initialize"), &ProceduralAnimation::initialize);
 	ClassDB::bind_method(D_METHOD("load_keyframe_data", "keyframe_index"), &ProceduralAnimation::load_keyframe_data);

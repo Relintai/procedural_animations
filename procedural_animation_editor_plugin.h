@@ -39,13 +39,7 @@ class ProceduralAnimationEditor : public VBoxContainer {
 	GDCLASS(ProceduralAnimationEditor, VBoxContainer);
 
 public:
-	enum NamePopupActions {
-		NAME_POPUP_ADD_ANIMATION_NAME,
-		NAME_POPUP_EDIT_ANIMATION_NAME,
-	};
-
 	enum DeletePopupActions {
-		DELETE_POPUP_ANIMATION,
 		DELETE_POPUP_KEYFRAME,
 	};
 
@@ -58,15 +52,8 @@ public:
 	void load_selected_animation();
 	void clear_keyframe_nodes();
 
-	void refresh_option_buttons();
-
-	void on_animation_option_button_pressed(int indx);
-	void refresh_animation_option_button();
 	void on_keyframe_node_changed(Node *node);
 
-	void animation_tool_button_id_pressed(int id);
-	void show_name_popup(NamePopupActions action);
-	void on_name_popup_confirmed();
 	void on_delete_popup_confirmed();
 
 	void on_connection_request(const String &from, const int from_slot, const String &to, const int to_slot);
@@ -81,14 +68,11 @@ protected:
 	static void _bind_methods();
 
 private:
-	int _selected_animation;
-
 	OptionButton *_animation_option_button;
 
 	DeletePopupActions _delete_popup_action;
 	ConfirmationDialog *_delete_popuop;
 
-	NamePopupActions _name_popup_action;
 	ConfirmationDialog *_name_popuop;
 	Label *_name_pupup_label;
 	LineEdit *_name_popup_line_edit;
@@ -142,7 +126,6 @@ protected:
 private:
 	int _id;
 	LineEdit *_name;
-	//OptionButton *_animation_keyframe_index_option_button;
 	SpinBox *_animation_keyframe_spinbox;
 	int _animation_keyframe_index;
 	int _next_keyframe;

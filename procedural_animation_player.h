@@ -25,47 +25,12 @@ SOFTWARE.
 
 #include "scene/main/node.h"
 
-#include "core/string_name.h"
-
 #include "procedural_animation.h"
 
 class ProceduralAnimationPlayer : public Node {
 	GDCLASS(ProceduralAnimationPlayer, Node);
 
-public:
-	Ref<ProceduralAnimation> get_animation();
-	void set_animation(const Ref<ProceduralAnimation> &animation);
-
-	int get_current_animation() const;
-	void set_current_animation(const int p_animation);
-
-	int get_curent_keyframe() const;
-	void set_curent_keyframe(const int p_keyframe);
-
-	float get_scale() const;
-	void set_scale(const float p_scale);
-
-	bool is_playing() const;
-
-	void play();
-	void stop();
-	void setup_frame();
-	void advance(float p_delta);
-
-	ProceduralAnimationPlayer();
-	~ProceduralAnimationPlayer();
-
-protected:
-	void _validate_property(PropertyInfo &property) const;
-	static void _bind_methods();
-
-private:
-	Ref<ProceduralAnimation> _animation;
-
-	int _current_animation;
-	int _curent_keyframe;
-	float _scale;
-	bool _playing;
+	friend class Animation;
 };
 
 #endif
