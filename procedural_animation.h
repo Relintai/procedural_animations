@@ -149,18 +149,6 @@ protected:
 		}
 	};
 
-	struct Category {
-		String name;
-		Map<int, AnimationEntry *> animations;
-
-		~Category() {
-			for (Map<int, AnimationEntry *>::Element *E = animations.front(); E; E = E->next())
-				memdelete(E->get());
-
-			animations.clear();
-		}
-	};
-
 public:
 	Ref<Animation> get_animation() const;
 	void set_animation(const Ref<Animation> &value);
@@ -173,50 +161,41 @@ public:
 	void remove_animation_keyframe_name(int keyframe_index);
 	PoolVector<String> get_animation_keyframe_names() const;
 
-	//Categories
-	PoolVector<int> get_category_indices() const;
-	int add_category(const String &name);
-	void remove_category(const int index);
-	bool has_category(const int index) const;
-
-	String get_category_name(const int category_index) const;
-	void set_category_name(const int category_index, const String &value);
-
 	//Animations
-	PoolVector<int> get_animation_indices(const int category_index) const;
-	int add_animation(const int category_index);
-	void remove_animation(const int category_index, const int animation_index);
-	bool has_animation(const int category_index, const int animation_index) const;
+	PoolVector<int> get_animation_indices() const;
+	int add_animation();
+	void remove_animation(const int animation_index);
+	bool has_animation(const int animation_index) const;
 
-	String get_animation_name(const int category_index, const int animation_index) const;
-	void set_animation_name(const int category_index, const int animation_index, const String &value);
+	String get_animation_name(const int animation_index) const;
+	void set_animation_name(const int animation_index, const String &value);
 
-	Vector2 get_animation_node_position(const int category_index, int animation_index) const;
-	void set_animation_node_position(const int category_index, const int animation_index, const Vector2 &value);
+	Vector2 get_animation_node_position(int animation_index) const;
+	void set_animation_node_position(const int animation_index, const Vector2 &value);
 
-	int get_animation_start_frame_index(const int category_index, const int animation_index) const;
-	void set_animation_start_frame_index(const int category_index, const int animation_index, const int value);
+	int get_animation_start_frame_index(const int animation_index) const;
+	void set_animation_start_frame_index(const int animation_index, const int value);
 
 	//Keyframes
-	PoolVector<int> get_keyframe_indices(const int category_index, const int animation_index) const;
-	int add_keyframe(const int category_index, const int animation_index);
-	void remove_keyframe(const int category_index, const int animation_index, const int keyframe_index);
-	bool has_keyframe(const int category_index, const int animation_index, const int keyframe_index) const;
+	PoolVector<int> get_keyframe_indices(const int animation_index) const;
+	int add_keyframe(const int animation_index);
+	void remove_keyframe(const int animation_index, const int keyframe_index);
+	bool has_keyframe(const int animation_index, const int keyframe_index) const;
 
-	String get_keyframe_name(const int category_index, const int animation_index, const int keyframe_index) const;
-	void set_keyframe_name(const int category_index, const int animation_index, const int keyframe_index, const String &value);
+	String get_keyframe_name(const int animation_index, const int keyframe_index) const;
+	void set_keyframe_name(const int animation_index, const int keyframe_index, const String &value);
 
-	int get_keyframe_animation_keyframe_index(const int category_index, int animation_index, const int keyframe_index) const;
-	void set_keyframe_animation_keyframe_index(const int category_index, int animation_index, const int keyframe_index, int value);
+	int get_keyframe_animation_keyframe_index(int animation_index, const int keyframe_index) const;
+	void set_keyframe_animation_keyframe_index(int animation_index, const int keyframe_index, int value);
 
-	int get_keyframe_next_keyframe_index(const int category_index, const int animation_index, const int keyframe_index) const;
-	void set_keyframe_next_keyframe_index(const int category_index, const int animation_index, const int keyframe_index, const int value);
+	int get_keyframe_next_keyframe_index(const int animation_index, const int keyframe_index) const;
+	void set_keyframe_next_keyframe_index(const int animation_index, const int keyframe_index, const int value);
 
-	Ref<Curve> get_keyframe_in_curve(const int category_index, const int animation_index, const int keyframe_index) const;
-	void set_keyframe_in_curve(const int category_index, const int animation_index, const int keyframe_index, const Ref<Curve> &value);
+	Ref<Curve> get_keyframe_in_curve(const int animation_index, const int keyframe_index) const;
+	void set_keyframe_in_curve(const int animation_index, const int keyframe_index, const Ref<Curve> &value);
 
-	Vector2 get_keyframe_node_position(const int category_index, int animation_index, const int keyframe_index) const;
-	void set_keyframe_node_position(const int category_index, const int animation_index, const int keyframe_index, const Vector2 &value);
+	Vector2 get_keyframe_node_position(int animation_index, const int keyframe_index) const;
+	void set_keyframe_node_position(const int animation_index, const int keyframe_index, const Vector2 &value);
 
 	void initialize();
 	void load_keyframe_data(int keyframe_index);
@@ -254,7 +233,7 @@ private:
 	String _editor_add_category_name;
 	String _add_editor_category_animation_name;
 
-	Map<int, Category *> _categories;
+	Map<int, AnimationEntry *> _animations;
 	Map<int, Vector<AnimationKey> *> _animation_data;
 
 	Ref<Animation> _animation;

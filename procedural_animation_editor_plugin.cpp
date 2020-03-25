@@ -27,7 +27,6 @@ SOFTWARE.
 void ProceduralAnimationEditor::edit(const Ref<ProceduralAnimation> &animation) {
 	_animation = animation;
 
-	_selected_category = -1;
 	_selected_animation = -1;
 
 	_stop->hide();
@@ -43,7 +42,6 @@ void ProceduralAnimationEditor::edit(const Ref<ProceduralAnimation> &animation) 
 void ProceduralAnimationEditor::edit(ProceduralAnimationPlayer *player) {
 	_animation_player = player;
 
-	_selected_category = -1;
 	_selected_animation = -1;
 
 	_stop->show();
@@ -63,14 +61,14 @@ void ProceduralAnimationEditor::load_selected_animation() {
 
 	ERR_FAIL_COND(!_animation.is_valid());
 
-	if (_selected_category == -1 || _selected_animation == -1)
+	if (_selected_animation == -1)
 		return;
 
-	_start_node->set_offset(_animation->get_animation_node_position(_selected_category, _selected_animation));
+	_start_node->set_offset(_animation->get_animation_node_position(_selected_animation));
 
 	const PoolVector<String> &animation_names = _animation->get_animation_keyframe_names();
 
-	PoolVector<int> kfind = _animation->get_keyframe_indices(_selected_category, _selected_animation);
+	PoolVector<int> kfind = _animation->get_keyframe_indices(_selected_animation);
 
 	for (int i = 0; i < kfind.size(); ++i) {
 		int id = kfind[i];
@@ -82,24 +80,24 @@ void ProceduralAnimationEditor::load_selected_animation() {
 		//gn->set_animation_keyframe_names(animation_names);
 
 		gn->set_id(id);
-		gn->set_offset(_animation->get_keyframe_node_position(_selected_category, _selected_animation, id));
-		gn->set_keyframe_name(_animation->get_keyframe_name(_selected_category, _selected_animation, id));
-		gn->set_next_keyframe(_animation->get_keyframe_next_keyframe_index(_selected_category, _selected_animation, id));
-		gn->set_in_curve(_animation->get_keyframe_in_curve(_selected_category, _selected_animation, id));
-		gn->set_animation_keyframe_index(_animation->get_keyframe_animation_keyframe_index(_selected_category, _selected_animation, id));
+		gn->set_offset(_animation->get_keyframe_node_position(_selected_animation, id));
+		gn->set_keyframe_name(_animation->get_keyframe_name(_selected_animation, id));
+		gn->set_next_keyframe(_animation->get_keyframe_next_keyframe_index(_selected_animation, id));
+		gn->set_in_curve(_animation->get_keyframe_in_curve(_selected_animation, id));
+		gn->set_animation_keyframe_index(_animation->get_keyframe_animation_keyframe_index(_selected_animation, id));
 		gn->connect("graphnode_changed", this, "on_keyframe_node_changed");
 	}
 
 	for (int i = 0; i < kfind.size(); ++i) {
 		int id = kfind[i];
 
-		int ni = _animation->get_keyframe_next_keyframe_index(_selected_category, _selected_animation, id);
+		int ni = _animation->get_keyframe_next_keyframe_index(_selected_animation, id);
 
 		if (ni != -1)
 			_graph_edit->connect_node(String::num(id), 0, String::num(ni), 0);
 	}
 
-	int st = _animation->get_animation_start_frame_index(_selected_category, _selected_animation);
+	int st = _animation->get_animation_start_frame_index(_selected_animation);
 
 	if (st != -1)
 		_graph_edit->connect_node("Start", 0, String::num(st), 0);
@@ -122,52 +120,13 @@ void ProceduralAnimationEditor::clear_keyframe_nodes() {
 	}
 }
 
-void ProceduralAnimationEditor::on_animation_option_button_pressed(int indx) {
-	if (_selected_category == -1)
-		return;
-
-	if (_selected_animation == indx)
-		return;
-
-	_selected_animation = indx;
-
-	load_selected_animation();
-}
-
-void ProceduralAnimationEditor::on_category_option_button_pressed(int indx) {
-	if (_selected_category == indx)
-		return;
-
-	_selected_category = indx;
-	_selected_animation = -1;
-
-	refresh_animation_option_button();
-}
-
 void ProceduralAnimationEditor::refresh_option_buttons() {
-	_category_option_button->clear();
 	_animation_option_button->clear();
 
 	if (!_animation.is_valid())
 		return;
 
-	PoolVector<int> cind = _animation->get_category_indices();
-
-	for (int i = 0; i < cind.size(); ++i) {
-		int indx = cind[i];
-
-		if (_selected_category == -1)
-			_selected_category = indx;
-
-		_category_option_button->add_item(_animation->get_category_name(indx), indx);
-	}
-
-	if (_selected_category == -1)
-		return;
-
-	_category_option_button->select(_selected_category);
-
-	PoolVector<int> aind = _animation->get_animation_indices(_selected_category);
+	PoolVector<int> aind = _animation->get_animation_indices();
 
 	for (int i = 0; i < aind.size(); ++i) {
 		int indx = aind[i];
@@ -175,13 +134,22 @@ void ProceduralAnimationEditor::refresh_option_buttons() {
 		if (_selected_animation == -1)
 			_selected_animation = indx;
 
-		_animation_option_button->add_item(_animation->get_animation_name(_selected_category, indx), indx);
+		_animation_option_button->add_item(_animation->get_animation_name(indx), indx);
 	}
 
 	if (_selected_animation == -1)
 		return;
 
 	_animation_option_button->select(_selected_animation);
+}
+
+void ProceduralAnimationEditor::on_animation_option_button_pressed(int indx) {
+	if (_selected_animation == indx)
+		return;
+
+	_selected_animation = indx;
+
+	load_selected_animation();
 }
 
 void ProceduralAnimationEditor::refresh_animation_option_button() {
@@ -191,10 +159,7 @@ void ProceduralAnimationEditor::refresh_animation_option_button() {
 	if (!_animation.is_valid())
 		return;
 
-	if (_selected_category == -1)
-		return;
-
-	PoolVector<int> aind = _animation->get_animation_indices(_selected_category);
+	PoolVector<int> aind = _animation->get_animation_indices();
 
 	for (int i = 0; i < aind.size(); ++i) {
 		int indx = aind[i];
@@ -202,7 +167,7 @@ void ProceduralAnimationEditor::refresh_animation_option_button() {
 		if (_selected_animation == -1)
 			_selected_animation = indx;
 
-		_animation_option_button->add_item(_animation->get_animation_name(_selected_category, indx), indx);
+		_animation_option_button->add_item(_animation->get_animation_name(indx), indx);
 	}
 
 	if (_selected_animation == -1)
@@ -216,32 +181,17 @@ void ProceduralAnimationEditor::on_keyframe_node_changed(Node *node) {
 
 	ERR_FAIL_COND(!ObjectDB::instance_validate(gn));
 	ERR_FAIL_COND(!_animation.is_valid());
-	ERR_FAIL_COND(_selected_category == -1);
 	ERR_FAIL_COND(_selected_animation == -1);
 
 	int id = gn->get_id();
 
-	_animation->set_keyframe_animation_keyframe_index(_selected_category, _selected_animation, id, gn->get_animation_keyframe_index());
-	_animation->set_keyframe_in_curve(_selected_category, _selected_animation, id, gn->get_in_curve());
-	_animation->set_keyframe_name(_selected_category, _selected_animation, id, gn->get_keyframe_name());
-	_animation->set_keyframe_next_keyframe_index(_selected_category, _selected_animation, id, gn->get_next_keyframe());
-	_animation->set_keyframe_node_position(_selected_category, _selected_animation, id, gn->get_offset());
+	_animation->set_keyframe_animation_keyframe_index(_selected_animation, id, gn->get_animation_keyframe_index());
+	_animation->set_keyframe_in_curve(_selected_animation, id, gn->get_in_curve());
+	_animation->set_keyframe_name(_selected_animation, id, gn->get_keyframe_name());
+	_animation->set_keyframe_next_keyframe_index(_selected_animation, id, gn->get_next_keyframe());
+	_animation->set_keyframe_node_position(_selected_animation, id, gn->get_offset());
 }
 
-void ProceduralAnimationEditor::category_tool_button_id_pressed(int id) {
-	switch (id) {
-		case 0:
-			show_name_popup(NAME_POPUP_ADD_CATEGORY_NAME);
-			break;
-		case 1:
-			show_name_popup(NAME_POPUP_EDIT_CATEGORY_NAME);
-			break;
-		case 2:
-			_delete_popup_action = DELETE_POPUP_CATEGORY;
-			_delete_popuop->popup_centered();
-			break;
-	}
-}
 void ProceduralAnimationEditor::animation_tool_button_id_pressed(int id) {
 	switch (id) {
 		case 0:
@@ -265,25 +215,14 @@ void ProceduralAnimationEditor::show_name_popup(NamePopupActions action) {
 
 void ProceduralAnimationEditor::on_name_popup_confirmed() {
 	switch (_name_popup_action) {
-		case NAME_POPUP_ADD_CATEGORY_NAME:
-			_selected_category = _animation->add_category(_name_popup_line_edit->get_text());
-
-			_selected_animation = -1;
-			break;
-		case NAME_POPUP_EDIT_CATEGORY_NAME:
-			_animation->set_category_name(_selected_category, _name_popup_line_edit->get_text());
-			break;
 		case NAME_POPUP_ADD_ANIMATION_NAME:
-			ERR_FAIL_COND(_selected_category == -1);
-
-			_selected_animation = _animation->add_animation(_selected_category);
-			_animation->set_animation_name(_selected_category, _selected_animation, _name_popup_line_edit->get_text());
+			_selected_animation = _animation->add_animation();
+			_animation->set_animation_name(_selected_animation, _name_popup_line_edit->get_text());
 			break;
 		case NAME_POPUP_EDIT_ANIMATION_NAME:
-			ERR_FAIL_COND(_selected_category == -1);
 			ERR_FAIL_COND(_selected_animation == -1);
 
-			_animation->set_animation_name(_selected_category, _selected_animation, _name_popup_line_edit->get_text());
+			_animation->set_animation_name(_selected_animation, _name_popup_line_edit->get_text());
 			break;
 	}
 
@@ -292,21 +231,10 @@ void ProceduralAnimationEditor::on_name_popup_confirmed() {
 
 void ProceduralAnimationEditor::on_delete_popup_confirmed() {
 	switch (_delete_popup_action) {
-		case DELETE_POPUP_CATEGORY:
-			ERR_FAIL_COND(_selected_category == -1);
-
-			_animation->remove_category(_selected_category);
-
-			_selected_category = -1;
-			_selected_animation = -1;
-
-			refresh_option_buttons();
-			break;
 		case DELETE_POPUP_ANIMATION:
-			ERR_FAIL_COND(_selected_category == -1);
 			ERR_FAIL_COND(_selected_animation == -1);
 
-			_animation->remove_animation(_selected_category, _selected_animation);
+			_animation->remove_animation(_selected_animation);
 
 			_selected_animation = -1;
 
@@ -324,24 +252,24 @@ void ProceduralAnimationEditor::on_connection_request(const String &from, const 
 	ProceduralAnimationEditorGraphNode *gn = Object::cast_to<ProceduralAnimationEditorGraphNode>(f);
 
 	if (gn != NULL) {
-		int ni = _animation->get_keyframe_next_keyframe_index(_selected_category, _selected_animation, gn->get_id());
+		int ni = _animation->get_keyframe_next_keyframe_index(_selected_animation, gn->get_id());
 
 		if (ni != -1) {
 			_graph_edit->disconnect_node(from, from_slot, String::num(ni), 0);
 		}
 
-		_animation->set_keyframe_next_keyframe_index(_selected_category, _selected_animation, gn->get_id(), to.to_int());
+		_animation->set_keyframe_next_keyframe_index(_selected_animation, gn->get_id(), to.to_int());
 	} else {
 		GraphNode *g = Object::cast_to<GraphNode>(f);
 
 		if (g != NULL) {
-			int st = _animation->get_animation_start_frame_index(_selected_category, _selected_animation);
+			int st = _animation->get_animation_start_frame_index(_selected_animation);
 
 			if (st != -1) {
 				_graph_edit->disconnect_node("Start", 0, String::num(st), 0);
 			}
 
-			_animation->set_animation_start_frame_index(_selected_category, _selected_animation, to.to_int());
+			_animation->set_animation_start_frame_index(_selected_animation, to.to_int());
 		}
 	}
 
@@ -353,12 +281,12 @@ void ProceduralAnimationEditor::on_disconnection_request(const String &from, con
 	ProceduralAnimationEditorGraphNode *gn = Object::cast_to<ProceduralAnimationEditorGraphNode>(f);
 
 	if (gn != NULL) {
-		_animation->set_keyframe_next_keyframe_index(_selected_category, _selected_animation, gn->get_id(), -1);
+		_animation->set_keyframe_next_keyframe_index(_selected_animation, gn->get_id(), -1);
 	} else {
 		GraphNode *g = Object::cast_to<GraphNode>(f);
 
 		if (g != NULL) {
-			_animation->set_animation_start_frame_index(_selected_category, _selected_animation, -1);
+			_animation->set_animation_start_frame_index(_selected_animation, -1);
 		}
 	}
 
@@ -366,10 +294,10 @@ void ProceduralAnimationEditor::on_disconnection_request(const String &from, con
 }
 
 void ProceduralAnimationEditor::add_frame_button_pressed() {
-	if (_selected_category == -1 || _selected_animation == -1)
+	if (_selected_animation == -1)
 		return;
 
-	int id = _animation->add_keyframe(_selected_category, _selected_animation);
+	int id = _animation->add_keyframe(_selected_animation);
 
 	ProceduralAnimationEditorGraphNode *gn = memnew(ProceduralAnimationEditorGraphNode);
 	gn->set_id(id);
@@ -393,9 +321,6 @@ void ProceduralAnimationEditor::_notification(int p_what) {
 }
 
 void ProceduralAnimationEditor::_bind_methods() {
-	ClassDB::bind_method(D_METHOD("on_category_option_button_pressed", "id"), &ProceduralAnimationEditor::on_category_option_button_pressed);
-
-	ClassDB::bind_method(D_METHOD("category_tool_button_id_pressed", "id"), &ProceduralAnimationEditor::category_tool_button_id_pressed);
 	ClassDB::bind_method(D_METHOD("animation_tool_button_id_pressed", "id"), &ProceduralAnimationEditor::animation_tool_button_id_pressed);
 	ClassDB::bind_method(D_METHOD("on_name_popup_confirmed"), &ProceduralAnimationEditor::on_name_popup_confirmed);
 
@@ -414,8 +339,7 @@ void ProceduralAnimationEditor::_bind_methods() {
 ProceduralAnimationEditor::ProceduralAnimationEditor() {
 	_animation_player = NULL;
 
-	_name_popup_action = NAME_POPUP_ADD_CATEGORY_NAME;
-	_selected_category = -1;
+	_name_popup_action = NAME_POPUP_ADD_ANIMATION_NAME;
 	_selected_animation = -1;
 }
 
@@ -424,29 +348,12 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 
 	set_h_size_flags(SIZE_EXPAND_FILL);
 
-	_name_popup_action = NAME_POPUP_ADD_CATEGORY_NAME;
-	_selected_category = -1;
+	_name_popup_action = NAME_POPUP_ADD_ANIMATION_NAME;
 	_selected_animation = -1;
 
 	//top bar
 	HBoxContainer *hbc = memnew(HBoxContainer);
 	add_child(hbc);
-
-	MenuButton *categtnb = memnew(MenuButton);
-	categtnb->set_text("Category");
-
-	PopupMenu *cpm = categtnb->get_popup();
-	cpm->add_item("Add", 0);
-	cpm->add_item("Rename", 1);
-	cpm->add_item("Delete", 2);
-	cpm->connect("id_pressed", this, "category_tool_button_id_pressed");
-
-	hbc->add_child(categtnb);
-
-	_category_option_button = memnew(OptionButton);
-	_category_option_button->set_h_size_flags(SIZE_EXPAND_FILL);
-	_category_option_button->connect("item_selected", this, "on_category_option_button_pressed");
-	hbc->add_child(_category_option_button);
 
 	MenuButton *animtn = memnew(MenuButton);
 	animtn->set_text("Animation");

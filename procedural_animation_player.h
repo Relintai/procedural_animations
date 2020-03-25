@@ -36,9 +36,6 @@ public:
 	Ref<ProceduralAnimation> get_animation();
 	void set_animation(const Ref<ProceduralAnimation> &animation);
 
-	int get_current_category() const;
-	void set_current_category(const int p_category);
-
 	int get_current_animation() const;
 	void set_current_animation(const int p_animation);
 
@@ -64,7 +61,7 @@ protected:
 
 private:
 	Ref<ProceduralAnimation> _animation;
-	int _current_category;
+
 	int _current_animation;
 	int _curent_keyframe;
 	float _scale;

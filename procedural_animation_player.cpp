@@ -29,13 +29,6 @@ void ProceduralAnimationPlayer::set_animation(const Ref<ProceduralAnimation> &an
 	_animation = animation;
 }
 
-int ProceduralAnimationPlayer::get_current_category() const {
-	return _current_category;
-}
-void ProceduralAnimationPlayer::set_current_category(const int p_category) {
-	_current_category = p_category;
-}
-
 int ProceduralAnimationPlayer::get_current_animation() const {
 	return _current_animation;
 }
@@ -79,7 +72,6 @@ void ProceduralAnimationPlayer::advance(float p_delta) {
 }
 
 ProceduralAnimationPlayer::ProceduralAnimationPlayer() {
-	_current_category = 0;
 	_current_animation = 0;
 	_curent_keyframe = 0;
 	_scale = 1.0;
@@ -91,39 +83,18 @@ ProceduralAnimationPlayer::~ProceduralAnimationPlayer() {
 
 void ProceduralAnimationPlayer::_validate_property(PropertyInfo &property) const {
 
-	if (property.name == "current_category") {
+	if (property.name == "current_animation") {
 
 		if (_animation.is_valid()) {
 
 			String names;
 
-			PoolIntArray arr = _animation->get_category_indices();
+			PoolIntArray arr = _animation->get_animation_indices();
 			for (int i = 0; i < arr.size(); ++i) {
 				if (i > 0)
 					names += ",";
 
-				names += _animation->get_category_name(arr[i]);
-			}
-
-			property.hint = PROPERTY_HINT_ENUM;
-			property.hint_string = names;
-		} else {
-
-			property.hint = PROPERTY_HINT_NONE;
-			property.hint_string = "";
-		}
-	} else if (property.name == "current_animation") {
-
-		if (_animation.is_valid() && _animation->has_category(_current_category)) {
-
-			String names;
-
-			PoolIntArray arr = _animation->get_animation_indices(_current_category);
-			for (int i = 0; i < arr.size(); ++i) {
-				if (i > 0)
-					names += ",";
-
-				names += _animation->get_animation_name(_current_category, arr[i]);
+				names += _animation->get_animation_name(arr[i]);
 			}
 
 			property.hint = PROPERTY_HINT_ENUM;
@@ -139,10 +110,6 @@ void ProceduralAnimationPlayer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_animation"), &ProceduralAnimationPlayer::get_animation);
 	ClassDB::bind_method(D_METHOD("set_animation", "value"), &ProceduralAnimationPlayer::set_animation);
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "animation", PROPERTY_HINT_RESOURCE_TYPE, "ProceduralAnimation"), "set_animation", "get_animation");
-
-	ClassDB::bind_method(D_METHOD("get_current_category"), &ProceduralAnimationPlayer::get_current_category);
-	ClassDB::bind_method(D_METHOD("set_current_category", "category"), &ProceduralAnimationPlayer::set_current_category);
-	ADD_PROPERTY(PropertyInfo(Variant::INT, "current_category"), "set_current_category", "get_current_category");
 
 	ClassDB::bind_method(D_METHOD("get_current_animation"), &ProceduralAnimationPlayer::get_current_animation);
 	ClassDB::bind_method(D_METHOD("set_current_animation", "animation"), &ProceduralAnimationPlayer::set_current_animation);
