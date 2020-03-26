@@ -423,14 +423,6 @@ void ProceduralAnimation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_start_frame_index"), &ProceduralAnimation::get_start_frame_index);
 	ClassDB::bind_method(D_METHOD("set_start_frame_index", "value"), &ProceduralAnimation::set_start_frame_index);
 
-	ClassDB::bind_method(D_METHOD("get_length"), &ProceduralAnimation::get_length);
-	ClassDB::bind_method(D_METHOD("set_length", "time_sec"), &ProceduralAnimation::set_length);
-	ADD_PROPERTY(PropertyInfo(Variant::REAL, "length", PROPERTY_HINT_RANGE, "0.001,99999,0.001"), "set_length", "get_length");
-
-	ClassDB::bind_method(D_METHOD("has_loop"), &ProceduralAnimation::has_loop);
-	ClassDB::bind_method(D_METHOD("set_loop", "enabled"), &ProceduralAnimation::set_loop);
-	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "loop"), "set_loop", "has_loop");
-
 	//Keyframes
 	ClassDB::bind_method(D_METHOD("get_keyframe_indices"), &ProceduralAnimation::get_keyframe_indices);
 	ClassDB::bind_method(D_METHOD("add_keyframe"), &ProceduralAnimation::add_keyframe);
