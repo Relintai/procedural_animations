@@ -36,20 +36,6 @@ void ProceduralAnimationEditor::edit(const Ref<ProceduralAnimation> &animation) 
 	clear_keyframe_nodes();
 }
 
-void ProceduralAnimationEditor::edit(ProceduralAnimationPlayer *player) {
-	_animation_player = player;
-
-	_stop->show();
-	_play->show();
-	_play_from->show();
-	_play_bw->show();
-	_play_bw_from->show();
-
-	//_animation = player->get_animation();
-
-	clear_keyframe_nodes();
-}
-
 void ProceduralAnimationEditor::load_selected_animation() {
 	clear_keyframe_nodes();
 
@@ -216,12 +202,9 @@ void ProceduralAnimationEditor::_bind_methods() {
 }
 
 ProceduralAnimationEditor::ProceduralAnimationEditor() {
-	_animation_player = NULL;
 }
 
 ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
-	_animation_player = NULL;
-
 	set_h_size_flags(SIZE_EXPAND_FILL);
 
 	//top bar
@@ -465,9 +448,6 @@ void ProceduralAnimationEditorGraphNode::_bind_methods() {
 void ProceduralAnimationEditorPlugin::edit(Object *p_object) {
 	if (Object::cast_to<ProceduralAnimation>(p_object)) {
 		animation_editor->edit(Object::cast_to<ProceduralAnimation>(p_object));
-		animation_editor_button->show();
-	} else if (Object::cast_to<ProceduralAnimationPlayer>(p_object)) {
-		animation_editor->edit(Object::cast_to<ProceduralAnimationPlayer>(p_object));
 		animation_editor_button->show();
 	} else {
 		animation_editor_button->set_pressed(false);

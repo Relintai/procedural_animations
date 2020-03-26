@@ -12,7 +12,6 @@ sources = [
     "register_types.cpp",
 
     "procedural_animation.cpp",
-    "procedural_animation_player.cpp",
     "procedural_animation_editor_plugin.cpp",
 ]
 

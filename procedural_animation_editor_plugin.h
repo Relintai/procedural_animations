@@ -31,7 +31,6 @@ SOFTWARE.
 
 #include "core/core_string_names.h"
 #include "procedural_animation.h"
-#include "procedural_animation_player.h"
 
 #include "editor/plugins/curve_editor_plugin.h"
 
@@ -45,7 +44,6 @@ public:
 
 public:
 	void edit(const Ref<ProceduralAnimation> &animation);
-	void edit(ProceduralAnimationPlayer *player);
 
 	void add_frame_button_pressed();
 
@@ -87,8 +85,6 @@ private:
 	Button *_play_bw;
 	Button *_play_bw_from;
 	ToolButton *_pin;
-
-	ProceduralAnimationPlayer *_animation_player;
 };
 
 class ProceduralAnimationEditorGraphNode : public GraphNode {
