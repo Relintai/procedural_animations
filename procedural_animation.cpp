@@ -180,96 +180,98 @@ void ProceduralAnimation::set_keyframe_node_position(const int keyframe_index, c
 
 void ProceduralAnimation::initialize() {
 	ERR_FAIL_COND(!_animation.is_valid());
-	/*
-	for (Map<int, Vector<AnimationKey> *>::Element *E = _animation_data.front(); E; E = E->next()) {
-		Vector<AnimationKey> *data = E->get();
-		data->clear();
-		memdelete(data);
+
+	clear();
+
+	for (int i = 0; i < _animation->get_track_count(); ++i) {
+		Animation::TrackType type = _animation->track_get_type(i);
+
+		add_track(type);
+
+		//TODO setting for this
+		track_set_interpolation_type(i, Animation::INTERPOLATION_CUBIC);
+		track_set_interpolation_loop_wrap(i, _animation->track_get_interpolation_loop_wrap(i));
+		track_set_path(i, _animation->track_get_path(i));
+		track_set_enabled(i, _animation->track_is_enabled(i));
+
+		switch (type) {
+			case Animation::TYPE_TRANSFORM: {
+				//nothing to do
+			} break;
+			case Animation::TYPE_VALUE: {
+				value_track_set_update_mode(i, _animation->value_track_get_update_mode(i));
+				value_track_set_update_mode(i, _animation->value_track_get_update_mode(i));
+			} break;
+			case Animation::TYPE_METHOD: {
+				//nothing to do
+			} break;
+			case Animation::TYPE_BEZIER: {
+				//nothing to do
+			} break;
+			case Animation::TYPE_AUDIO: {
+				//nothing to do
+			} break;
+			case Animation::TYPE_ANIMATION: {
+				//nothing to do
+			} break;
+		}
 	}
 
-	_animation_data.clear();
-
+	float keyframe_time = 0;
 	for (Map<int, AnimationKeyFrame *>::Element *K = _keyframes.front(); K; K = K->next()) {
 		int keyframe_index = K->get()->animation_keyframe_index;
 
-		if (!_animation_data.has(keyframe_index))
-			load_keyframe_data(keyframe_index);
-	}*/
+		load_keyframe_data(keyframe_time, keyframe_index);
+
+		//TODO add param
+		keyframe_time += 1.0;
+	}
 }
 
-void ProceduralAnimation::load_keyframe_data(int keyframe_index) {
+void ProceduralAnimation::load_keyframe_data(const float keyframe_time, const int keyframe_index, const bool interpolation_allowed) {
 	ERR_FAIL_COND(!_animation.is_valid());
-	/*
-	Vector<AnimationKey> *vec = NULL;
-
-	if (_animation_data.has(keyframe_index)) {
-		//reload data
-		vec = _animation_data[keyframe_index];
-		vec->clear();
-	} else {
-		vec = memnew(Vector<AnimationKey>);
-	}
 
 	float time = keyframe_index * _animation->get_length() / static_cast<float>(_animation_fps);
 
 	for (int i = 0; i < _animation->get_track_count(); ++i) {
 		int key_index = _animation->track_find_key(i, time, true);
 
-		if (key_index == -1)
-			continue;
+		if (key_index == -1) {
+			if (!interpolation_allowed)
+				continue;
 
-		Animation::TrackType tt = _animation->track_get_type(i);
+			//track doesn't have a key at the specified time. Try to create one with interpolations.
 
-		switch (tt) {
-			case Animation::TYPE_VALUE: {
-				VariantAnimationKey d;
-				d.path = _animation->track_get_path(key_index);
-				d.value = _animation->track_get_key_value(i, key_index);
+			Animation::TrackType tt = _animation->track_get_type(i);
 
-				vec->push_back(d);
-			} break;
-			case Animation::TYPE_TRANSFORM: {
-				Vector3 loc;
-				Quat rot;
-				Vector3 scale;
+			switch (tt) {
+				case Animation::TYPE_VALUE: {
+					Variant val = value_track_interpolate(i, time);
 
-				if (_animation->transform_track_get_key(i, key_index, &loc, &rot, &scale) == OK) {
-					TransformAnimationKey d;
+					track_insert_key(i, keyframe_time, val);
+				} break;
+				case Animation::TYPE_TRANSFORM: {
+					Vector3 loc;
+					Quat rot;
+					Vector3 scale;
 
-					d.path = _animation->track_get_path(key_index);
-					d.loc = loc;
-					d.rot = rot;
-					d.scale = scale;
-
-					vec->push_back(d);
-				}
-			} break;
-			case Animation::TYPE_METHOD: {
-				MethodAnimationKey d;
-				d.path = _animation->track_get_path(key_index);
-
-				d.method = _animation->method_track_get_name(i, key_index);
-				d.params = _animation->method_track_get_params(i, key_index);
-
-				vec->push_back(d);
-			} break;
-			case Animation::TYPE_BEZIER: {
-				//ignore
-			} break;
-			case Animation::TYPE_AUDIO: {
-				AudioAnimationKey d;
-				d.path = _animation->track_get_path(key_index);
-				d.stream = _animation->audio_track_get_key_stream(i, key_index);
-				d.start_offset = _animation->audio_track_get_key_start_offset(i, key_index);
-				d.end_offset = _animation->audio_track_get_key_end_offset(i, key_index);
-
-				vec->push_back(d);
-			} break;
-			case Animation::TYPE_ANIMATION: {
-				///ignore
-			} break;
+					if (_animation->transform_track_interpolate(i, time, &loc, &rot, &scale) == OK) {
+						transform_track_insert_key(i, keyframe_time, loc, rot, scale);
+					}
+				} break;
+				case Animation::TYPE_METHOD: {
+				} break;
+				case Animation::TYPE_BEZIER: {
+				} break;
+				case Animation::TYPE_AUDIO: {
+				} break;
+				case Animation::TYPE_ANIMATION: {
+				} break;
+			}
+		} else {
+			track_insert_key(i, keyframe_time, _animation->track_get_key_value(i, key_index));
 		}
-	}*/
+	}
 }
 
 ProceduralAnimation::ProceduralAnimation() {
@@ -445,5 +447,5 @@ void ProceduralAnimation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_keyframe_node_position", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_node_position);
 
 	ClassDB::bind_method(D_METHOD("initialize"), &ProceduralAnimation::initialize);
-	ClassDB::bind_method(D_METHOD("load_keyframe_data", "keyframe_index"), &ProceduralAnimation::load_keyframe_data);
+	ClassDB::bind_method(D_METHOD("load_keyframe_data", "keyframe_index", "keyframe_index", "interpolation_allowed"), &ProceduralAnimation::load_keyframe_data, DEFVAL(false));
 }

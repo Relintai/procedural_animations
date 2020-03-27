@@ -95,7 +95,7 @@ public:
 	void set_keyframe_node_position(const int keyframe_index, const Vector2 &value);
 
 	void initialize();
-	void load_keyframe_data(int keyframe_index);
+	void load_keyframe_data(const float keyframe_time, const int keyframe_index, const bool interpolation_allowed = false);
 
 	ProceduralAnimation();
 	~ProceduralAnimation();
