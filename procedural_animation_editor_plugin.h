@@ -47,7 +47,7 @@ public:
 
 	void add_frame_button_pressed();
 
-	void load_selected_animation();
+	void load_animation();
 	void clear_keyframe_nodes();
 
 	void on_keyframe_node_changed(Node *node);
@@ -66,8 +66,6 @@ protected:
 	static void _bind_methods();
 
 private:
-	OptionButton *_animation_option_button;
-
 	DeletePopupActions _delete_popup_action;
 	ConfirmationDialog *_delete_popuop;
 
@@ -79,11 +77,6 @@ private:
 	Ref<ProceduralAnimation> _animation;
 	GraphEdit *_graph_edit;
 
-	Button *_stop;
-	Button *_play;
-	Button *_play_from;
-	Button *_play_bw;
-	Button *_play_bw_from;
 	ToolButton *_pin;
 };
 
@@ -107,15 +100,18 @@ public:
 	Ref<Curve> get_in_curve() const;
 	void set_in_curve(const Ref<Curve> &value);
 
-	void set_animation_keyframe_names(const PoolVector<String> &names);
-
-	void on_animation_keyframe_spinbox_value_changed(const String &value);
-	void changed();
+	Ref<ProceduralAnimation> get_animation();
+	void set_animation(const Ref<ProceduralAnimation> &animation);
 
 	ProceduralAnimationEditorGraphNode();
 	~ProceduralAnimationEditorGraphNode();
 
 protected:
+	void on_animation_keyframe_spinbox_value_changed(float value);
+	void on_dragged(Vector2 from, Vector2 to);
+
+	void changed();
+
 	void _notification(int p_what);
 	static void _bind_methods();
 
@@ -123,10 +119,13 @@ private:
 	int _id;
 	LineEdit *_name;
 	SpinBox *_animation_keyframe_spinbox;
+
 	int _animation_keyframe_index;
 	int _next_keyframe;
 	CurveEditor *_curve_editor;
 	Ref<Curve> _in_curve;
+
+	Ref<ProceduralAnimation> _animation;
 };
 
 class ProceduralAnimationEditorPlugin : public EditorPlugin {

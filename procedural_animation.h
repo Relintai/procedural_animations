@@ -83,7 +83,7 @@ public:
 	void set_keyframe_name(const int keyframe_index, const String &value);
 
 	int get_keyframe_animation_keyframe_index(const int keyframe_index) const;
-	void set_keyframe_animation_keyframe_index(const int keyframe_index, int value);
+	void set_keyframe_animation_keyframe_index(const int keyframe_index, const int value);
 
 	int get_keyframe_next_keyframe_index(const int keyframe_index) const;
 	void set_keyframe_next_keyframe_index(const int keyframe_index, const int value);
@@ -94,7 +94,7 @@ public:
 	Vector2 get_keyframe_node_position(const int keyframe_index) const;
 	void set_keyframe_node_position(const int keyframe_index, const Vector2 &value);
 
-	void initialize();
+	void process_animation_data();
 	void load_keyframe_data(const float keyframe_time, const int keyframe_index, const bool interpolation_allowed = false);
 
 	ProceduralAnimation();

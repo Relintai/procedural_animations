@@ -79,6 +79,8 @@ int ProceduralAnimation::get_start_frame_index() const {
 }
 void ProceduralAnimation::set_start_frame_index(const int value) {
 	_start_frame_index = value;
+
+	process_animation_data();
 }
 
 //Keyframes
@@ -107,6 +109,8 @@ int ProceduralAnimation::add_keyframe() {
 
 	_keyframes[key] = entry;
 
+	process_animation_data();
+
 	return key;
 }
 void ProceduralAnimation::remove_keyframe(const int keyframe_index) {
@@ -117,6 +121,8 @@ void ProceduralAnimation::remove_keyframe(const int keyframe_index) {
 	_keyframes.erase(keyframe_index);
 
 	memdelete(entry);
+
+	process_animation_data();
 }
 
 bool ProceduralAnimation::has_keyframe(const int keyframe_index) const {
@@ -139,10 +145,12 @@ int ProceduralAnimation::get_keyframe_animation_keyframe_index(const int keyfram
 
 	return _keyframes[keyframe_index]->animation_keyframe_index;
 }
-void ProceduralAnimation::set_keyframe_animation_keyframe_index(const int keyframe_index, int value) {
+void ProceduralAnimation::set_keyframe_animation_keyframe_index(const int keyframe_index, const int value) {
 	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
 
 	_keyframes[keyframe_index]->animation_keyframe_index = value;
+
+	process_animation_data();
 }
 
 int ProceduralAnimation::get_keyframe_next_keyframe_index(const int keyframe_index) const {
@@ -154,6 +162,8 @@ void ProceduralAnimation::set_keyframe_next_keyframe_index(const int keyframe_in
 	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
 
 	_keyframes[keyframe_index]->next_keyframe = value;
+
+	process_animation_data();
 }
 
 Ref<Curve> ProceduralAnimation::get_keyframe_in_curve(const int keyframe_index) const {
@@ -165,6 +175,8 @@ void ProceduralAnimation::set_keyframe_in_curve(const int keyframe_index, const 
 	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
 
 	_keyframes[keyframe_index]->in_curve = value;
+
+	process_animation_data();
 }
 
 Vector2 ProceduralAnimation::get_keyframe_node_position(const int keyframe_index) const {
@@ -178,8 +190,9 @@ void ProceduralAnimation::set_keyframe_node_position(const int keyframe_index, c
 	_keyframes[keyframe_index]->position = value;
 }
 
-void ProceduralAnimation::initialize() {
-	ERR_FAIL_COND(!_animation.is_valid());
+void ProceduralAnimation::process_animation_data() {
+	if (!_animation.is_valid())
+		return;
 
 	clear();
 
@@ -200,7 +213,6 @@ void ProceduralAnimation::initialize() {
 			} break;
 			case Animation::TYPE_VALUE: {
 				value_track_set_update_mode(i, _animation->value_track_get_update_mode(i));
-				value_track_set_update_mode(i, _animation->value_track_get_update_mode(i));
 			} break;
 			case Animation::TYPE_METHOD: {
 				//nothing to do
@@ -217,18 +229,18 @@ void ProceduralAnimation::initialize() {
 		}
 	}
 
-	float keyframe_time = 0;
+	float target_keyframe_time = 0;
 	for (Map<int, AnimationKeyFrame *>::Element *K = _keyframes.front(); K; K = K->next()) {
 		int keyframe_index = K->get()->animation_keyframe_index;
 
-		load_keyframe_data(keyframe_time, keyframe_index);
+		load_keyframe_data(target_keyframe_time, keyframe_index);
 
 		//TODO add param
-		keyframe_time += 1.0;
+		target_keyframe_time += 1.0;
 	}
 }
 
-void ProceduralAnimation::load_keyframe_data(const float keyframe_time, const int keyframe_index, const bool interpolation_allowed) {
+void ProceduralAnimation::load_keyframe_data(const float target_keyframe_time, const int keyframe_index, const bool interpolation_allowed) {
 	ERR_FAIL_COND(!_animation.is_valid());
 
 	float time = keyframe_index * _animation->get_length() / static_cast<float>(_animation_fps);
@@ -237,8 +249,14 @@ void ProceduralAnimation::load_keyframe_data(const float keyframe_time, const in
 		int key_index = _animation->track_find_key(i, time, true);
 
 		if (key_index == -1) {
-			if (!interpolation_allowed)
+			if (!interpolation_allowed) {
+				key_index = _animation->track_find_key(i, time, false);
+
+				if (key_index != -1)
+					track_insert_key(i, target_keyframe_time, _animation->track_get_key_value(i, key_index));
+
 				continue;
+			}
 
 			//track doesn't have a key at the specified time. Try to create one with interpolations.
 
@@ -248,7 +266,7 @@ void ProceduralAnimation::load_keyframe_data(const float keyframe_time, const in
 				case Animation::TYPE_VALUE: {
 					Variant val = value_track_interpolate(i, time);
 
-					track_insert_key(i, keyframe_time, val);
+					track_insert_key(i, target_keyframe_time, val);
 				} break;
 				case Animation::TYPE_TRANSFORM: {
 					Vector3 loc;
@@ -256,7 +274,7 @@ void ProceduralAnimation::load_keyframe_data(const float keyframe_time, const in
 					Vector3 scale;
 
 					if (_animation->transform_track_interpolate(i, time, &loc, &rot, &scale) == OK) {
-						transform_track_insert_key(i, keyframe_time, loc, rot, scale);
+						transform_track_insert_key(i, target_keyframe_time, loc, rot, scale);
 					}
 				} break;
 				case Animation::TYPE_METHOD: {
@@ -269,7 +287,7 @@ void ProceduralAnimation::load_keyframe_data(const float keyframe_time, const in
 				} break;
 			}
 		} else {
-			track_insert_key(i, keyframe_time, _animation->track_get_key_value(i, key_index));
+			track_insert_key(i, target_keyframe_time, _animation->track_get_key_value(i, key_index));
 		}
 	}
 }
@@ -300,7 +318,7 @@ bool ProceduralAnimation::_set(const StringName &p_name, const Variant &p_value)
 		_start_frame_index = p_value;
 
 		return true;
-	} else if (name == "keyframe") {
+	} else if (name.get_slicec('/', 0) == "keyframe") {
 		int keyframe_index = name.get_slicec('/', 1).to_int();
 		String keyframe_name = name.get_slicec('/', 2);
 
@@ -353,7 +371,7 @@ bool ProceduralAnimation::_get(const StringName &p_name, Variant &r_ret) const {
 		r_ret = _start_frame_index;
 
 		return true;
-	} else if (name == "keyframe") {
+	} else if (name.get_slicec('/', 0) == "keyframe") {
 		int keyframe_index = name.get_slicec('/', 1).to_int();
 		String keyframe_prop_name = name.get_slicec('/', 2);
 
@@ -393,7 +411,7 @@ void ProceduralAnimation::_get_property_list(List<PropertyInfo> *p_list) const {
 	//int property_usange = PROPERTY_USAGE_STORAGE | PROPERTY_USAGE_INTERNAL;
 	int property_usange = PROPERTY_USAGE_DEFAULT;
 
-	p_list->push_back(PropertyInfo(Variant::VECTOR2, "position", PROPERTY_HINT_NONE, "", property_usange));
+	p_list->push_back(PropertyInfo(Variant::VECTOR2, "start_node_position", PROPERTY_HINT_NONE, "", property_usange));
 	p_list->push_back(PropertyInfo(Variant::INT, "start_frame_index", PROPERTY_HINT_NONE, "", property_usange));
 
 	for (Map<int, AnimationKeyFrame *>::Element *K = _keyframes.front(); K; K = K->next()) {
@@ -446,6 +464,6 @@ void ProceduralAnimation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_keyframe_node_position", "keyframe_index"), &ProceduralAnimation::get_keyframe_node_position);
 	ClassDB::bind_method(D_METHOD("set_keyframe_node_position", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_node_position);
 
-	ClassDB::bind_method(D_METHOD("initialize"), &ProceduralAnimation::initialize);
+	ClassDB::bind_method(D_METHOD("process_animation_data"), &ProceduralAnimation::process_animation_data);
 	ClassDB::bind_method(D_METHOD("load_keyframe_data", "keyframe_index", "keyframe_index", "interpolation_allowed"), &ProceduralAnimation::load_keyframe_data, DEFVAL(false));
 }
