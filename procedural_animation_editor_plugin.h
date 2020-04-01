@@ -111,6 +111,9 @@ public:
 	float get_transition() const;
 	void set_transition(const float value);
 
+	float get_time() const;
+	void set_time(const float value);
+
 	Ref<ProceduralAnimation> get_animation();
 	void set_animation(const Ref<ProceduralAnimation> &animation);
 
@@ -119,6 +122,8 @@ public:
 
 protected:
 	void on_animation_keyframe_spinbox_value_changed(float value);
+	void on_time_spinbox_value_changed(float value);
+
 	void on_dragged(Vector2 from, Vector2 to);
 
 	void changed();
@@ -132,11 +137,13 @@ private:
 	int _id;
 	LineEdit *_name;
 	SpinBox *_animation_keyframe_spinbox;
+	SpinBox *_time_spinbox;
 
 	int _animation_keyframe_index;
 	int _next_keyframe;
 	EditorPropertyEasing *_transition_editor;
 	float _transition;
+	float _time;
 
 	Ref<ProceduralAnimation> _animation;
 };

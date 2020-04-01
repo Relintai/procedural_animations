@@ -396,6 +396,22 @@ void ProceduralAnimationEditorGraphNode::set_transition(const float value) {
 	changed();
 }
 
+float ProceduralAnimationEditorGraphNode::get_time() const {
+	return _time;
+}
+void ProceduralAnimationEditorGraphNode::set_time(const float value) {
+	_time = value;
+
+	_time_spinbox->set_value(value);
+
+	if (!_animation.is_valid())
+		return;
+
+	_animation->set_keyframe_time(_id, value);
+
+	changed();
+}
+
 Ref<ProceduralAnimation> ProceduralAnimationEditorGraphNode::get_animation() {
 	return _animation;
 }
@@ -410,6 +426,7 @@ void ProceduralAnimationEditorGraphNode::set_animation(const Ref<ProceduralAnima
 	set_next_keyframe(animation->get_keyframe_next_keyframe_index(_id));
 	set_transition(animation->get_keyframe_transition(_id));
 	set_animation_keyframe_index(animation->get_keyframe_animation_keyframe_index(_id));
+	set_time(animation->get_keyframe_time(_id));
 
 	_animation = animation;
 }
@@ -418,7 +435,8 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 	_id = 0;
 
 	_animation_keyframe_index = 0;
-	_next_keyframe = 0;
+	_next_keyframe = -1;
+	_time = 1;
 
 	set_title("Animation Frame");
 	set_show_close_button(true);
@@ -441,6 +459,17 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 	_animation_keyframe_spinbox->connect("value_changed", this, "on_animation_keyframe_spinbox_value_changed");
 	add_child(_animation_keyframe_spinbox);
 
+	Label *lt = memnew(Label);
+	lt->set_text("Time");
+	add_child(lt);
+
+	_time_spinbox = memnew(SpinBox);
+	_time_spinbox->set_max(999999999);
+	_time_spinbox->set_min(0);
+	_time_spinbox->set_h_size_flags(SIZE_EXPAND_FILL);
+	_time_spinbox->connect("value_changed", this, "on_time_spinbox_value_changed");
+	add_child(_time_spinbox);
+
 	_transition_editor = memnew(EditorPropertyEasing);
 	_transition_editor->set_margin(MARGIN_TOP, 5 * EDSCALE);
 	_transition_editor->set_margin(MARGIN_BOTTOM, 5 * EDSCALE);
@@ -457,6 +486,10 @@ ProceduralAnimationEditorGraphNode::~ProceduralAnimationEditorGraphNode() {
 
 void ProceduralAnimationEditorGraphNode::on_animation_keyframe_spinbox_value_changed(float value) {
 	set_animation_keyframe_index(value);
+}
+
+void ProceduralAnimationEditorGraphNode::on_time_spinbox_value_changed(float value) {
+	set_time(value);
 }
 
 void ProceduralAnimationEditorGraphNode::on_dragged(Vector2 from, Vector2 to) {
@@ -491,6 +524,7 @@ void ProceduralAnimationEditorGraphNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("on_keyframe_name_modified", "name"), &ProceduralAnimationEditorGraphNode::on_keyframe_name_modified);
 	ClassDB::bind_method(D_METHOD("changed"), &ProceduralAnimationEditorGraphNode::changed);
 	ClassDB::bind_method(D_METHOD("on_animation_keyframe_spinbox_value_changed", "value"), &ProceduralAnimationEditorGraphNode::on_animation_keyframe_spinbox_value_changed);
+	ClassDB::bind_method(D_METHOD("on_time_spinbox_value_changed", "value"), &ProceduralAnimationEditorGraphNode::on_time_spinbox_value_changed);
 
 	ClassDB::bind_method(D_METHOD("on_dragged", "from", "to"), &ProceduralAnimationEditorGraphNode::on_dragged);
 

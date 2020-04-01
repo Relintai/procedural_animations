@@ -179,6 +179,19 @@ void ProceduralAnimation::set_keyframe_transition(const int keyframe_index, cons
 	process_animation_data();
 }
 
+float ProceduralAnimation::get_keyframe_time(const int keyframe_index) const {
+	ERR_FAIL_COND_V(!_keyframes.has(keyframe_index), 0);
+
+	return _keyframes[keyframe_index]->time;
+}
+void ProceduralAnimation::set_keyframe_time(const int keyframe_index, const float value) {
+	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
+
+	_keyframes[keyframe_index]->time = value;
+
+	process_animation_data();
+}
+
 Vector2 ProceduralAnimation::get_keyframe_node_position(const int keyframe_index) const {
 	ERR_FAIL_COND_V(!_keyframes.has(keyframe_index), Vector2());
 
@@ -193,6 +206,8 @@ void ProceduralAnimation::set_keyframe_node_position(const int keyframe_index, c
 void ProceduralAnimation::process_animation_data() {
 	if (!_animation.is_valid())
 		return;
+
+	bool looping = has_loop();
 
 	clear();
 
@@ -268,9 +283,11 @@ void ProceduralAnimation::process_animation_data() {
 		if (!found_keyframe)
 			ERR_PRINT("Could not find any keyframe! Index: " + String::num(animation_keyframe_index) + " at time: " + String::num(time));
 
-		//TODO add param
-		target_keyframe_time += 1.0;
+		target_keyframe_time += frame->time;
 	}
+
+	set_length(target_keyframe_time);
+	set_loop(looping);
 }
 
 ProceduralAnimation::ProceduralAnimation() {

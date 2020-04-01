@@ -41,13 +41,15 @@ protected:
 		String name;
 		int animation_keyframe_index;
 		int next_keyframe;
-		Vector2 position;
 		float transition;
+		float time;
+		Vector2 position;
 
 		AnimationKeyFrame() {
 			animation_keyframe_index = 0;
 			transition = 1.0;
 			next_keyframe = -1;
+			time = 1;
 		}
 
 		~AnimationKeyFrame() {
@@ -89,6 +91,9 @@ public:
 
 	float get_keyframe_transition(const int keyframe_index) const;
 	void set_keyframe_transition(const int keyframe_index, const float value);
+
+	float get_keyframe_time(const int keyframe_index) const;
+	void set_keyframe_time(const int keyframe_index, const float value);
 
 	Vector2 get_keyframe_node_position(const int keyframe_index) const;
 	void set_keyframe_node_position(const int keyframe_index, const Vector2 &value);
