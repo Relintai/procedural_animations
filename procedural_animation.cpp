@@ -231,9 +231,11 @@ void ProceduralAnimation::process_animation_data() {
 	float target_keyframe_time = 0;
 	float key_step = _animation->get_length() / static_cast<float>(_animation_fps);
 	int next_animation_key = _start_frame_index;
+	Vector<int> _used_keys;
 	while (next_animation_key != -1) {
 		ERR_BREAK(!_keyframes.has(next_animation_key));
-
+		ERR_BREAK_MSG(_used_keys.find(next_animation_key, 0) != -1, "ProceduralAnimation: " + get_name() + " " + get_path() + " contains a cycle in it's graph. Stopping generation.");
+		_used_keys.push_back(next_animation_key);
 		AnimationKeyFrame *frame = _keyframes[next_animation_key];
 		next_animation_key = frame->next_keyframe;
 
