@@ -33,6 +33,7 @@ SOFTWARE.
 #include "procedural_animation.h"
 
 class EditorPropertyEasing;
+class EditorPropertyResource;
 
 class ProceduralAnimationEditor : public VBoxContainer {
 	GDCLASS(ProceduralAnimationEditor, VBoxContainer);
@@ -62,6 +63,12 @@ public:
 	~ProceduralAnimationEditor();
 
 protected:
+	Ref<Animation> get_animation_target_animation();
+	void set_animation_target_animation(const Ref<Animation> &animation);
+
+	void on_animation_fps_changed(const float value);
+	void on_loop_checkbox_toggled(const bool value);
+
 	void _notification(int p_what);
 	static void _bind_methods();
 
@@ -72,6 +79,10 @@ private:
 	ConfirmationDialog *_name_popuop;
 	Label *_name_pupup_label;
 	LineEdit *_name_popup_line_edit;
+
+	EditorPropertyResource *_animation_target_animation_property;
+	SpinBox *_animation_fps_spinbox;
+	CheckBox *_loop_checkbox;
 
 	GraphNode *_start_node;
 	Ref<ProceduralAnimation> _animation;

@@ -38,6 +38,10 @@ void ProceduralAnimationEditor::edit(const Ref<ProceduralAnimation> &animation) 
 
 	if (animation.is_valid())
 		load_animation();
+
+	_animation_target_animation_property->update_property();
+	_animation_fps_spinbox->set_value(_animation->get_animation_fps());
+	_loop_checkbox->set_pressed(_animation->has_loop());
 }
 
 void ProceduralAnimationEditor::load_animation() {
@@ -159,6 +163,39 @@ void ProceduralAnimationEditor::add_frame_button_pressed() {
 	_graph_edit->add_child(gn);
 }
 
+Ref<Animation> ProceduralAnimationEditor::get_animation_target_animation() {
+	if (!_animation.is_valid())
+		return Ref<Animation>();
+
+	return _animation->get_animation();
+}
+void ProceduralAnimationEditor::set_animation_target_animation(const Ref<Animation> &animation) {
+	if (!_animation.is_valid())
+		return;
+
+	_animation->set_animation(animation);
+}
+
+void ProceduralAnimationEditor::on_animation_fps_changed(const float value) {
+	if (!_animation.is_valid())
+		return;
+
+	if (_animation->get_animation_fps() == value)
+		return;
+
+	_animation->set_animation_fps(value);
+}
+
+void ProceduralAnimationEditor::on_loop_checkbox_toggled(const bool value) {
+	if (!_animation.is_valid())
+		return;
+
+	if (_animation->has_loop() == value)
+		return;
+
+	_animation->set_loop(value);
+}
+
 void ProceduralAnimationEditor::_notification(int p_what) {
 
 	switch (p_what) {
@@ -175,6 +212,13 @@ void ProceduralAnimationEditor::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("on_connection_request", "from", "from_slot", "to", "to_slot"), &ProceduralAnimationEditor::on_connection_request);
 	ClassDB::bind_method(D_METHOD("on_disconnection_request", "from", "from_slot", "to", "to_slot"), &ProceduralAnimationEditor::on_disconnection_request);
+
+	ClassDB::bind_method(D_METHOD("get_animation_target_animation"), &ProceduralAnimationEditor::get_animation_target_animation);
+	ClassDB::bind_method(D_METHOD("set_animation_target_animation", "animation"), &ProceduralAnimationEditor::set_animation_target_animation);
+	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "animation_target_animation", PROPERTY_HINT_RESOURCE_TYPE, "Animation"), "set_animation_target_animation", "get_animation_target_animation");
+
+	ClassDB::bind_method(D_METHOD("on_animation_fps_changed", "value"), &ProceduralAnimationEditor::on_animation_fps_changed);
+	ClassDB::bind_method(D_METHOD("on_loop_checkbox_toggled", "value"), &ProceduralAnimationEditor::on_loop_checkbox_toggled);
 }
 
 ProceduralAnimationEditor::ProceduralAnimationEditor() {
@@ -186,6 +230,29 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 	//top bar
 	HBoxContainer *hbc = memnew(HBoxContainer);
 	add_child(hbc);
+
+	_animation_target_animation_property = memnew(EditorPropertyResource);
+	_animation_target_animation_property->set_margin(MARGIN_TOP, 5 * EDSCALE);
+	_animation_target_animation_property->set_margin(MARGIN_BOTTOM, 5 * EDSCALE);
+	_animation_target_animation_property->set_custom_minimum_size(Size2(300 * EDSCALE, 0));
+	_animation_target_animation_property->set_label("Animation");
+	_animation_target_animation_property->set_object_and_property(this, "animation_target_animation");
+	hbc->add_child(_animation_target_animation_property);
+
+	Label *fl = memnew(Label);
+	fl->set_text("FPS");
+	hbc->add_child(fl);
+
+	_animation_fps_spinbox = memnew(SpinBox);
+	_animation_fps_spinbox->set_max(999999999);
+	_animation_fps_spinbox->set_step(1);
+	_animation_fps_spinbox->connect("value_changed", this, "on_animation_fps_changed");
+	hbc->add_child(_animation_fps_spinbox);
+
+	_loop_checkbox = memnew(CheckBox);
+	_loop_checkbox->set_text("Loop");
+	_loop_checkbox->connect("toggled", this, "on_loop_checkbox_toggled");
+	hbc->add_child(_loop_checkbox);
 
 	Control *spacer = memnew(Control);
 	spacer->set_h_size_flags(SIZE_EXPAND_FILL);
@@ -374,11 +441,10 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 	_animation_keyframe_spinbox->connect("value_changed", this, "on_animation_keyframe_spinbox_value_changed");
 	add_child(_animation_keyframe_spinbox);
 
-	Label *l3 = memnew(Label);
-	l3->set_text("Easing");
-	add_child(l3);
-
 	_transition_editor = memnew(EditorPropertyEasing);
+	_transition_editor->set_margin(MARGIN_TOP, 5 * EDSCALE);
+	_transition_editor->set_margin(MARGIN_BOTTOM, 5 * EDSCALE);
+	_transition_editor->set_label("Easing");
 	_transition_editor->set_object_and_property(this, "transition");
 	_transition_editor->set_h_size_flags(SIZE_EXPAND_FILL);
 	add_child(_transition_editor);

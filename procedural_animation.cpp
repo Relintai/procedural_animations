@@ -228,80 +228,45 @@ void ProceduralAnimation::process_animation_data() {
 		}
 	}
 
-	float previous_keyframe_time = 0;
 	float target_keyframe_time = 0;
-	for (Map<int, AnimationKeyFrame *>::Element *K = _keyframes.front(); K; K = K->next()) {
-		int keyframe_index = K->get()->animation_keyframe_index;
+	float key_step = _animation->get_length() / static_cast<float>(_animation_fps);
+	int next_animation_key = _start_frame_index;
+	while (next_animation_key != -1) {
+		ERR_BREAK(!_keyframes.has(next_animation_key));
 
-		load_keyframe_data(target_keyframe_time, previous_keyframe_time, keyframe_index);
+		AnimationKeyFrame *frame = _keyframes[next_animation_key];
+		next_animation_key = frame->next_keyframe;
 
-		//TODO add param
-		previous_keyframe_time = target_keyframe_time;
-		target_keyframe_time += 1.0;
-	}
-}
+		int animation_keyframe_index = frame->animation_keyframe_index;
 
-void ProceduralAnimation::load_keyframe_data(const float target_keyframe_time, const float previous_keyframe_time, const int keyframe_index, const bool interpolation_allowed) {
-	ERR_FAIL_COND(!_animation.is_valid());
-	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
+		float time = animation_keyframe_index * key_step;
 
-	float time = keyframe_index * _animation->get_length() / static_cast<float>(_animation_fps);
-	float step_time = 1 / static_cast<float>(_animation_fps);
-	int steps = static_cast<int>((target_keyframe_time - previous_keyframe_time) / step_time + 0.5);
+		bool found_keyframe = false;
+		for (int i = 0; i < _animation->get_track_count(); ++i) {
+			int key_index = _animation->track_find_key(i, time, true);
+			Variant key_value;
 
-	for (int i = 0; i < _animation->get_track_count(); ++i) {
-		int key_index = _animation->track_find_key(i, time, true);
-		Variant key_value;
+			if (key_index == -1) {
+				key_index = _animation->track_find_key(i, time, false);
 
-		if (key_index == -1) {
-			key_index = _animation->track_find_key(i, time, false);
+				if (key_index != -1)
+					key_value = _animation->track_get_key_value(i, key_index);
+			}
 
-			if (key_index != -1)
-				key_value = _animation->track_get_key_value(i, key_index);
-			/*	
-			else {
-				if (interpolation_allowed) {
-					//track doesn't have a key at the specified time. Try to create one with interpolations.
+			if (key_value.get_type() == Variant::NIL)
+				continue;
 
-					Animation::TrackType tt = _animation->track_get_type(i);
+			track_insert_key(i, target_keyframe_time, key_value, frame->transition);
 
-					switch (tt) {
-						case Animation::TYPE_VALUE: {
-							Variant val = value_track_interpolate(i, time);
-
-							track_insert_key(i, target_keyframe_time, val);
-						} break;
-						case Animation::TYPE_TRANSFORM: {
-							Vector3 loc;
-							Quat rot;
-							Vector3 scale;
-
-							if (_animation->transform_track_interpolate(i, time, &loc, &rot, &scale) == OK) {
-								transform_track_insert_key(i, target_keyframe_time, loc, rot, scale);
-							}
-						} break;
-						case Animation::TYPE_METHOD: {
-						} break;
-						case Animation::TYPE_BEZIER: {
-						} break;
-						case Animation::TYPE_AUDIO: {
-						} break;
-						case Animation::TYPE_ANIMATION: {
-						} break;
-					}
-				}
-			}*/
+			found_keyframe = true;
 		}
 
-		if (key_value.get_type() == Variant::NIL)
-			continue;
+		if (!found_keyframe)
+			ERR_PRINT("Could not find any keyframe! Index: " + String::num(animation_keyframe_index) + " at time: " + String::num(time));
 
-		AnimationKeyFrame *frame = _keyframes[keyframe_index];
-
-		track_insert_key(i, target_keyframe_time, key_value, frame->transition);
+		//TODO add param
+		target_keyframe_time += 1.0;
 	}
-
-	optimize();
 }
 
 ProceduralAnimation::ProceduralAnimation() {
@@ -473,12 +438,8 @@ void ProceduralAnimation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_keyframe_transition", "keyframe_index"), &ProceduralAnimation::get_keyframe_transition);
 	ClassDB::bind_method(D_METHOD("set_keyframe_transition", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_transition);
 
-	//ClassDB::bind_method(D_METHOD("get_keyframe_in_curve", "keyframe_index"), &ProceduralAnimation::get_keyframe_in_curve);
-	//ClassDB::bind_method(D_METHOD("set_keyframe_in_curve", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_in_curve);
-
 	ClassDB::bind_method(D_METHOD("get_keyframe_node_position", "keyframe_index"), &ProceduralAnimation::get_keyframe_node_position);
 	ClassDB::bind_method(D_METHOD("set_keyframe_node_position", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_node_position);
 
 	ClassDB::bind_method(D_METHOD("process_animation_data"), &ProceduralAnimation::process_animation_data);
-	ClassDB::bind_method(D_METHOD("load_keyframe_data", "keyframe_index", "keyframe_index", "interpolation_allowed"), &ProceduralAnimation::load_keyframe_data, DEFVAL(false));
 }
