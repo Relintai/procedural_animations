@@ -41,7 +41,6 @@ protected:
 		String name;
 		int animation_keyframe_index;
 		int next_keyframe;
-		//Ref<Curve> in_curve;
 		Vector2 position;
 		float transition;
 
@@ -49,11 +48,9 @@ protected:
 			animation_keyframe_index = 0;
 			transition = 1.0;
 			next_keyframe = -1;
-			//in_curve.instance();
 		}
 
 		~AnimationKeyFrame() {
-			//in_curve.unref();
 		}
 	};
 
@@ -92,9 +89,6 @@ public:
 
 	float get_keyframe_transition(const int keyframe_index) const;
 	void set_keyframe_transition(const int keyframe_index, const float value);
-
-	//Ref<Curve> get_keyframe_in_curve(const int keyframe_index) const;
-	//void set_keyframe_in_curve(const int keyframe_index, const Ref<Curve> &value);
 
 	Vector2 get_keyframe_node_position(const int keyframe_index) const;
 	void set_keyframe_node_position(const int keyframe_index, const Vector2 &value);

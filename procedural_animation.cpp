@@ -179,20 +179,6 @@ void ProceduralAnimation::set_keyframe_transition(const int keyframe_index, cons
 	process_animation_data();
 }
 
-/*
-Ref<Curve> ProceduralAnimation::get_keyframe_in_curve(const int keyframe_index) const {
-	ERR_FAIL_COND_V(!_keyframes.has(keyframe_index), Ref<Curve>());
-
-	return _keyframes[keyframe_index]->in_curve;
-}
-void ProceduralAnimation::set_keyframe_in_curve(const int keyframe_index, const Ref<Curve> &value) {
-	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
-
-	_keyframes[keyframe_index]->in_curve = value;
-
-	process_animation_data();
-}*/
-
 Vector2 ProceduralAnimation::get_keyframe_node_position(const int keyframe_index) const {
 	ERR_FAIL_COND_V(!_keyframes.has(keyframe_index), Vector2());
 
@@ -313,24 +299,6 @@ void ProceduralAnimation::load_keyframe_data(const float target_keyframe_time, c
 		AnimationKeyFrame *frame = _keyframes[keyframe_index];
 
 		track_insert_key(i, target_keyframe_time, key_value, frame->transition);
-
-		/*
-		if (!frame->in_curve.is_valid()) {
-			track_insert_key(i, target_keyframe_time, key_value);
-
-			continue;
-		}
-		
-		Ref<Curve> in_curve = frame->in_curve;
-
-		float targ_step_val = (target_keyframe_time - previous_keyframe_time) / static_cast<float>(steps);
-		float step_val = 1.0 / static_cast<float>(steps);
-		for (int j = 0; j < steps; ++j) {
-			float tr = in_curve->interpolate(j * step_val);
-
-			track_insert_key(i, previous_keyframe_time + (j * targ_step_val), key_value, tr);
-		}
-		*/
 	}
 
 	optimize();
@@ -390,9 +358,6 @@ bool ProceduralAnimation::_set(const StringName &p_name, const Variant &p_value)
 			keyframe->transition = p_value;
 
 			return true;
-			//} else if (keyframe_name == "in_curve") {
-			//	keyframe->in_curve = p_value;
-			//	return true;
 		} else if (keyframe_name == "position") {
 			keyframe->position = p_value;
 
@@ -440,10 +405,6 @@ bool ProceduralAnimation::_get(const StringName &p_name, Variant &r_ret) const {
 			r_ret = keyframe->transition;
 
 			return true;
-			//} else if (keyframe_prop_name == "in_curve") {
-			//	r_ret = keyframe->in_curve;
-
-			//	return true;
 		} else if (keyframe_prop_name == "position") {
 			r_ret = keyframe->position;
 
@@ -469,7 +430,6 @@ void ProceduralAnimation::_get_property_list(List<PropertyInfo> *p_list) const {
 		p_list->push_back(PropertyInfo(Variant::STRING, "keyframe/" + itos(K->key()) + "/name", PROPERTY_HINT_NONE, "", property_usange));
 		p_list->push_back(PropertyInfo(Variant::INT, "keyframe/" + itos(K->key()) + "/animation_keyframe_index", PROPERTY_HINT_NONE, "", property_usange));
 		p_list->push_back(PropertyInfo(Variant::INT, "keyframe/" + itos(K->key()) + "/next_keyframe", PROPERTY_HINT_NONE, "", property_usange));
-		//p_list->push_back(PropertyInfo(Variant::OBJECT, "keyframe/" + itos(K->key()) + "/in_curve", PROPERTY_HINT_RESOURCE_TYPE, "Curve", property_usange));
 		p_list->push_back(PropertyInfo(Variant::REAL, "keyframe/" + itos(K->key()) + "/transition", PROPERTY_HINT_EXP_EASING, "", property_usange));
 		p_list->push_back(PropertyInfo(Variant::VECTOR2, "keyframe/" + itos(K->key()) + "/position", PROPERTY_HINT_NONE, "", property_usange));
 	}

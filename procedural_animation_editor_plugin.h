@@ -97,9 +97,6 @@ public:
 	int get_next_keyframe() const;
 	void set_next_keyframe(const int value);
 
-	//Ref<Curve> get_in_curve() const;
-	//void set_in_curve(const Ref<Curve> &value);
-
 	float get_transition() const;
 	void set_transition(const float value);
 
@@ -126,7 +123,6 @@ private:
 	int _animation_keyframe_index;
 	int _next_keyframe;
 	CurveEditor *_curve_editor;
-	//Ref<Curve> _in_curve;
 	float _transition;
 
 	Ref<ProceduralAnimation> _animation;

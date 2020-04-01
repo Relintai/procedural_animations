@@ -324,27 +324,6 @@ void ProceduralAnimationEditorGraphNode::set_transition(const float value) {
 	changed();
 }
 
-/*
-Ref<Curve> ProceduralAnimationEditorGraphNode::get_in_curve() const {
-	return _in_curve;
-}
-void ProceduralAnimationEditorGraphNode::set_in_curve(const Ref<Curve> &value) {
-	if (_in_curve.is_valid()) {
-		_in_curve->disconnect(CoreStringNames::get_singleton()->changed, this, "changed");
-	}
-
-	_in_curve = value;
-	_curve_editor->set_curve(value);
-	_in_curve->connect(CoreStringNames::get_singleton()->changed, this, "changed");
-
-	if (!_animation.is_valid())
-		return;
-
-	_animation->set_keyframe_in_curve(_id, _in_curve);
-
-	changed();
-}*/
-
 Ref<ProceduralAnimation> ProceduralAnimationEditorGraphNode::get_animation() {
 	return _animation;
 }
@@ -358,7 +337,6 @@ void ProceduralAnimationEditorGraphNode::set_animation(const Ref<ProceduralAnima
 	set_keyframe_name(animation->get_keyframe_name(_id));
 	set_next_keyframe(animation->get_keyframe_next_keyframe_index(_id));
 	set_transition(animation->get_keyframe_transition(_id));
-	//set_in_curve(animation->get_keyframe_in_curve(_id));
 	set_animation_keyframe_index(animation->get_keyframe_animation_keyframe_index(_id));
 
 	_animation = animation;
@@ -392,7 +370,7 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 	add_child(_animation_keyframe_spinbox);
 
 	Label *l3 = memnew(Label);
-	l3->set_text("In Curve");
+	l3->set_text("Easing");
 	add_child(l3);
 
 	_curve_editor = memnew(CurveEditor);
@@ -403,7 +381,6 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 }
 
 ProceduralAnimationEditorGraphNode::~ProceduralAnimationEditorGraphNode() {
-	//_in_curve.unref();
 }
 
 void ProceduralAnimationEditorGraphNode::on_animation_keyframe_spinbox_value_changed(float value) {
