@@ -310,6 +310,21 @@ void ProceduralAnimationEditorGraphNode::set_next_keyframe(const int value) {
 	changed();
 }
 
+float ProceduralAnimationEditorGraphNode::get_transition() const {
+	return _transition;
+}
+void ProceduralAnimationEditorGraphNode::set_transition(const float value) {
+	_transition = value;
+
+	if (!_animation.is_valid())
+		return;
+
+	_animation->set_keyframe_transition(_id, value);
+
+	changed();
+}
+
+/*
 Ref<Curve> ProceduralAnimationEditorGraphNode::get_in_curve() const {
 	return _in_curve;
 }
@@ -328,7 +343,7 @@ void ProceduralAnimationEditorGraphNode::set_in_curve(const Ref<Curve> &value) {
 	_animation->set_keyframe_in_curve(_id, _in_curve);
 
 	changed();
-}
+}*/
 
 Ref<ProceduralAnimation> ProceduralAnimationEditorGraphNode::get_animation() {
 	return _animation;
@@ -342,7 +357,8 @@ void ProceduralAnimationEditorGraphNode::set_animation(const Ref<ProceduralAnima
 	set_offset(animation->get_keyframe_node_position(_id));
 	set_keyframe_name(animation->get_keyframe_name(_id));
 	set_next_keyframe(animation->get_keyframe_next_keyframe_index(_id));
-	set_in_curve(animation->get_keyframe_in_curve(_id));
+	set_transition(animation->get_keyframe_transition(_id));
+	//set_in_curve(animation->get_keyframe_in_curve(_id));
 	set_animation_keyframe_index(animation->get_keyframe_animation_keyframe_index(_id));
 
 	_animation = animation;
@@ -387,7 +403,7 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 }
 
 ProceduralAnimationEditorGraphNode::~ProceduralAnimationEditorGraphNode() {
-	_in_curve.unref();
+	//_in_curve.unref();
 }
 
 void ProceduralAnimationEditorGraphNode::on_animation_keyframe_spinbox_value_changed(float value) {

@@ -41,17 +41,19 @@ protected:
 		String name;
 		int animation_keyframe_index;
 		int next_keyframe;
-		Ref<Curve> in_curve;
+		//Ref<Curve> in_curve;
 		Vector2 position;
+		float transition;
 
 		AnimationKeyFrame() {
 			animation_keyframe_index = 0;
+			transition = 1.0;
 			next_keyframe = -1;
-			in_curve.instance();
+			//in_curve.instance();
 		}
 
 		~AnimationKeyFrame() {
-			in_curve.unref();
+			//in_curve.unref();
 		}
 	};
 
@@ -88,14 +90,17 @@ public:
 	int get_keyframe_next_keyframe_index(const int keyframe_index) const;
 	void set_keyframe_next_keyframe_index(const int keyframe_index, const int value);
 
-	Ref<Curve> get_keyframe_in_curve(const int keyframe_index) const;
-	void set_keyframe_in_curve(const int keyframe_index, const Ref<Curve> &value);
+	float get_keyframe_transition(const int keyframe_index) const;
+	void set_keyframe_transition(const int keyframe_index, const float value);
+
+	//Ref<Curve> get_keyframe_in_curve(const int keyframe_index) const;
+	//void set_keyframe_in_curve(const int keyframe_index, const Ref<Curve> &value);
 
 	Vector2 get_keyframe_node_position(const int keyframe_index) const;
 	void set_keyframe_node_position(const int keyframe_index, const Vector2 &value);
 
 	void process_animation_data();
-	void load_keyframe_data(const float keyframe_time, const int keyframe_index, const bool interpolation_allowed = false);
+	void load_keyframe_data(const float keyframe_time, const float previous_keyframe_time, const int keyframe_index, const bool interpolation_allowed = false);
 
 	ProceduralAnimation();
 	~ProceduralAnimation();

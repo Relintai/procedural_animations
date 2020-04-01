@@ -166,6 +166,20 @@ void ProceduralAnimation::set_keyframe_next_keyframe_index(const int keyframe_in
 	process_animation_data();
 }
 
+float ProceduralAnimation::get_keyframe_transition(const int keyframe_index) const {
+	ERR_FAIL_COND_V(!_keyframes.has(keyframe_index), 0);
+
+	return _keyframes[keyframe_index]->transition;
+}
+void ProceduralAnimation::set_keyframe_transition(const int keyframe_index, const float value) {
+	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
+
+	_keyframes[keyframe_index]->transition = value;
+
+	process_animation_data();
+}
+
+/*
 Ref<Curve> ProceduralAnimation::get_keyframe_in_curve(const int keyframe_index) const {
 	ERR_FAIL_COND_V(!_keyframes.has(keyframe_index), Ref<Curve>());
 
@@ -177,7 +191,7 @@ void ProceduralAnimation::set_keyframe_in_curve(const int keyframe_index, const 
 	_keyframes[keyframe_index]->in_curve = value;
 
 	process_animation_data();
-}
+}*/
 
 Vector2 ProceduralAnimation::get_keyframe_node_position(const int keyframe_index) const {
 	ERR_FAIL_COND_V(!_keyframes.has(keyframe_index), Vector2());
@@ -201,8 +215,7 @@ void ProceduralAnimation::process_animation_data() {
 
 		add_track(type);
 
-		//TODO setting for this
-		track_set_interpolation_type(i, Animation::INTERPOLATION_CUBIC);
+		track_set_interpolation_type(i, _animation->track_get_interpolation_type(i));
 		track_set_interpolation_loop_wrap(i, _animation->track_get_interpolation_loop_wrap(i));
 		track_set_path(i, _animation->track_get_path(i));
 		track_set_enabled(i, _animation->track_is_enabled(i));
@@ -229,67 +242,98 @@ void ProceduralAnimation::process_animation_data() {
 		}
 	}
 
+	float previous_keyframe_time = 0;
 	float target_keyframe_time = 0;
 	for (Map<int, AnimationKeyFrame *>::Element *K = _keyframes.front(); K; K = K->next()) {
 		int keyframe_index = K->get()->animation_keyframe_index;
 
-		load_keyframe_data(target_keyframe_time, keyframe_index);
+		load_keyframe_data(target_keyframe_time, previous_keyframe_time, keyframe_index);
 
 		//TODO add param
+		previous_keyframe_time = target_keyframe_time;
 		target_keyframe_time += 1.0;
 	}
 }
 
-void ProceduralAnimation::load_keyframe_data(const float target_keyframe_time, const int keyframe_index, const bool interpolation_allowed) {
+void ProceduralAnimation::load_keyframe_data(const float target_keyframe_time, const float previous_keyframe_time, const int keyframe_index, const bool interpolation_allowed) {
 	ERR_FAIL_COND(!_animation.is_valid());
+	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
 
 	float time = keyframe_index * _animation->get_length() / static_cast<float>(_animation_fps);
+	float step_time = 1 / static_cast<float>(_animation_fps);
+	int steps = static_cast<int>((target_keyframe_time - previous_keyframe_time) / step_time + 0.5);
 
 	for (int i = 0; i < _animation->get_track_count(); ++i) {
 		int key_index = _animation->track_find_key(i, time, true);
+		Variant key_value;
 
 		if (key_index == -1) {
-			if (!interpolation_allowed) {
-				key_index = _animation->track_find_key(i, time, false);
+			key_index = _animation->track_find_key(i, time, false);
 
-				if (key_index != -1)
-					track_insert_key(i, target_keyframe_time, _animation->track_get_key_value(i, key_index));
+			if (key_index != -1)
+				key_value = _animation->track_get_key_value(i, key_index);
+			/*	
+			else {
+				if (interpolation_allowed) {
+					//track doesn't have a key at the specified time. Try to create one with interpolations.
 
-				continue;
-			}
+					Animation::TrackType tt = _animation->track_get_type(i);
 
-			//track doesn't have a key at the specified time. Try to create one with interpolations.
+					switch (tt) {
+						case Animation::TYPE_VALUE: {
+							Variant val = value_track_interpolate(i, time);
 
-			Animation::TrackType tt = _animation->track_get_type(i);
+							track_insert_key(i, target_keyframe_time, val);
+						} break;
+						case Animation::TYPE_TRANSFORM: {
+							Vector3 loc;
+							Quat rot;
+							Vector3 scale;
 
-			switch (tt) {
-				case Animation::TYPE_VALUE: {
-					Variant val = value_track_interpolate(i, time);
-
-					track_insert_key(i, target_keyframe_time, val);
-				} break;
-				case Animation::TYPE_TRANSFORM: {
-					Vector3 loc;
-					Quat rot;
-					Vector3 scale;
-
-					if (_animation->transform_track_interpolate(i, time, &loc, &rot, &scale) == OK) {
-						transform_track_insert_key(i, target_keyframe_time, loc, rot, scale);
+							if (_animation->transform_track_interpolate(i, time, &loc, &rot, &scale) == OK) {
+								transform_track_insert_key(i, target_keyframe_time, loc, rot, scale);
+							}
+						} break;
+						case Animation::TYPE_METHOD: {
+						} break;
+						case Animation::TYPE_BEZIER: {
+						} break;
+						case Animation::TYPE_AUDIO: {
+						} break;
+						case Animation::TYPE_ANIMATION: {
+						} break;
 					}
-				} break;
-				case Animation::TYPE_METHOD: {
-				} break;
-				case Animation::TYPE_BEZIER: {
-				} break;
-				case Animation::TYPE_AUDIO: {
-				} break;
-				case Animation::TYPE_ANIMATION: {
-				} break;
-			}
-		} else {
-			track_insert_key(i, target_keyframe_time, _animation->track_get_key_value(i, key_index));
+				}
+			}*/
 		}
+
+		if (key_value.get_type() == Variant::NIL)
+			continue;
+
+		AnimationKeyFrame *frame = _keyframes[keyframe_index];
+
+		track_insert_key(i, target_keyframe_time, key_value, frame->transition);
+
+		/*
+		if (!frame->in_curve.is_valid()) {
+			track_insert_key(i, target_keyframe_time, key_value);
+
+			continue;
+		}
+		
+		Ref<Curve> in_curve = frame->in_curve;
+
+		float targ_step_val = (target_keyframe_time - previous_keyframe_time) / static_cast<float>(steps);
+		float step_val = 1.0 / static_cast<float>(steps);
+		for (int j = 0; j < steps; ++j) {
+			float tr = in_curve->interpolate(j * step_val);
+
+			track_insert_key(i, previous_keyframe_time + (j * targ_step_val), key_value, tr);
+		}
+		*/
 	}
+
+	optimize();
 }
 
 ProceduralAnimation::ProceduralAnimation() {
@@ -342,10 +386,13 @@ bool ProceduralAnimation::_set(const StringName &p_name, const Variant &p_value)
 			keyframe->next_keyframe = p_value;
 
 			return true;
-		} else if (keyframe_name == "in_curve") {
-			keyframe->in_curve = p_value;
+		} else if (keyframe_name == "transition") {
+			keyframe->transition = p_value;
 
 			return true;
+			//} else if (keyframe_name == "in_curve") {
+			//	keyframe->in_curve = p_value;
+			//	return true;
 		} else if (keyframe_name == "position") {
 			keyframe->position = p_value;
 
@@ -389,10 +436,14 @@ bool ProceduralAnimation::_get(const StringName &p_name, Variant &r_ret) const {
 			r_ret = keyframe->next_keyframe;
 
 			return true;
-		} else if (keyframe_prop_name == "in_curve") {
-			r_ret = keyframe->in_curve;
+		} else if (keyframe_prop_name == "transition") {
+			r_ret = keyframe->transition;
 
 			return true;
+			//} else if (keyframe_prop_name == "in_curve") {
+			//	r_ret = keyframe->in_curve;
+
+			//	return true;
 		} else if (keyframe_prop_name == "position") {
 			r_ret = keyframe->position;
 
@@ -418,7 +469,8 @@ void ProceduralAnimation::_get_property_list(List<PropertyInfo> *p_list) const {
 		p_list->push_back(PropertyInfo(Variant::STRING, "keyframe/" + itos(K->key()) + "/name", PROPERTY_HINT_NONE, "", property_usange));
 		p_list->push_back(PropertyInfo(Variant::INT, "keyframe/" + itos(K->key()) + "/animation_keyframe_index", PROPERTY_HINT_NONE, "", property_usange));
 		p_list->push_back(PropertyInfo(Variant::INT, "keyframe/" + itos(K->key()) + "/next_keyframe", PROPERTY_HINT_NONE, "", property_usange));
-		p_list->push_back(PropertyInfo(Variant::OBJECT, "keyframe/" + itos(K->key()) + "/in_curve", PROPERTY_HINT_RESOURCE_TYPE, "Curve", property_usange));
+		//p_list->push_back(PropertyInfo(Variant::OBJECT, "keyframe/" + itos(K->key()) + "/in_curve", PROPERTY_HINT_RESOURCE_TYPE, "Curve", property_usange));
+		p_list->push_back(PropertyInfo(Variant::REAL, "keyframe/" + itos(K->key()) + "/transition", PROPERTY_HINT_EXP_EASING, "", property_usange));
 		p_list->push_back(PropertyInfo(Variant::VECTOR2, "keyframe/" + itos(K->key()) + "/position", PROPERTY_HINT_NONE, "", property_usange));
 	}
 }
@@ -458,8 +510,11 @@ void ProceduralAnimation::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_keyframe_next_keyframe_index", "keyframe_index"), &ProceduralAnimation::get_keyframe_next_keyframe_index);
 	ClassDB::bind_method(D_METHOD("set_keyframe_next_keyframe_index", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_next_keyframe_index);
 
-	ClassDB::bind_method(D_METHOD("get_keyframe_in_curve", "keyframe_index"), &ProceduralAnimation::get_keyframe_in_curve);
-	ClassDB::bind_method(D_METHOD("set_keyframe_in_curve", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_in_curve);
+	ClassDB::bind_method(D_METHOD("get_keyframe_transition", "keyframe_index"), &ProceduralAnimation::get_keyframe_transition);
+	ClassDB::bind_method(D_METHOD("set_keyframe_transition", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_transition);
+
+	//ClassDB::bind_method(D_METHOD("get_keyframe_in_curve", "keyframe_index"), &ProceduralAnimation::get_keyframe_in_curve);
+	//ClassDB::bind_method(D_METHOD("set_keyframe_in_curve", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_in_curve);
 
 	ClassDB::bind_method(D_METHOD("get_keyframe_node_position", "keyframe_index"), &ProceduralAnimation::get_keyframe_node_position);
 	ClassDB::bind_method(D_METHOD("set_keyframe_node_position", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_node_position);
