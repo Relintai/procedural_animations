@@ -109,6 +109,23 @@ void ProceduralAnimationEditor::on_delete_popup_confirmed() {
 }
 
 void ProceduralAnimationEditor::on_connection_request(const String &from, const int from_slot, const String &to, const int to_slot) {
+	List<GraphEdit::Connection> conns;
+	_graph_edit->get_connection_list(&conns);
+
+	//Lets make sure that there are no loops in the keyframe graph. Easiest way to check in this case,
+	//is to just make sure that nothing is connected to the current node.
+	//Note, that loops can still be created, but those will not be conected to the start node,
+	//so those are not a problem.
+	for (List<GraphEdit::Connection>::Element *E = conns.front(); E; E = E->next()) {
+		GraphEdit::Connection c = E->get();
+
+		if (c.to == to) {
+			return;
+		}
+	}
+
+	//no loops found
+
 	Node *f = _graph_edit->get_node_or_null(from);
 
 	ProceduralAnimationEditorGraphNode *gn = Object::cast_to<ProceduralAnimationEditorGraphNode>(f);
@@ -159,8 +176,10 @@ void ProceduralAnimationEditor::add_frame_button_pressed() {
 	int id = _animation->add_keyframe();
 
 	ProceduralAnimationEditorGraphNode *gn = memnew(ProceduralAnimationEditorGraphNode);
-	gn->set_id(id);
 	_graph_edit->add_child(gn);
+	gn->set_name(String::num(id));
+	gn->set_id(id);
+	gn->set_animation(_animation);
 }
 
 Ref<Animation> ProceduralAnimationEditor::get_animation_target_animation() {
@@ -438,7 +457,8 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 
 	_animation_keyframe_index = 0;
 	_next_keyframe = -1;
-	_time = 0;
+	_time = 1;
+	_transition = 1.0;
 
 	set_title("Animation Frame");
 	set_show_close_button(true);
@@ -469,6 +489,7 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 	_time_spinbox->set_max(999999999);
 	_time_spinbox->set_min(0);
 	_time_spinbox->set_step(0.01);
+	_time_spinbox->set_value(1);
 	_time_spinbox->set_h_size_flags(SIZE_EXPAND_FILL);
 	_time_spinbox->connect("value_changed", this, "on_time_spinbox_value_changed");
 	add_child(_time_spinbox);
