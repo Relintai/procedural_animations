@@ -344,6 +344,10 @@ bool ProceduralAnimation::_set(const StringName &p_name, const Variant &p_value)
 			keyframe->transition = p_value;
 
 			return true;
+		} else if (keyframe_name == "time") {
+			keyframe->time = p_value;
+
+			return true;
 		} else if (keyframe_name == "position") {
 			keyframe->position = p_value;
 
@@ -391,6 +395,10 @@ bool ProceduralAnimation::_get(const StringName &p_name, Variant &r_ret) const {
 			r_ret = keyframe->transition;
 
 			return true;
+		} else if (keyframe_prop_name == "time") {
+			r_ret = keyframe->time;
+
+			return true;
 		} else if (keyframe_prop_name == "position") {
 			r_ret = keyframe->position;
 
@@ -417,6 +425,7 @@ void ProceduralAnimation::_get_property_list(List<PropertyInfo> *p_list) const {
 		p_list->push_back(PropertyInfo(Variant::INT, "keyframe/" + itos(K->key()) + "/animation_keyframe_index", PROPERTY_HINT_NONE, "", property_usange));
 		p_list->push_back(PropertyInfo(Variant::INT, "keyframe/" + itos(K->key()) + "/next_keyframe", PROPERTY_HINT_NONE, "", property_usange));
 		p_list->push_back(PropertyInfo(Variant::REAL, "keyframe/" + itos(K->key()) + "/transition", PROPERTY_HINT_EXP_EASING, "", property_usange));
+		p_list->push_back(PropertyInfo(Variant::REAL, "keyframe/" + itos(K->key()) + "/time", PROPERTY_HINT_NONE, "", property_usange));
 		p_list->push_back(PropertyInfo(Variant::VECTOR2, "keyframe/" + itos(K->key()) + "/position", PROPERTY_HINT_NONE, "", property_usange));
 	}
 }
@@ -458,6 +467,9 @@ void ProceduralAnimation::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("get_keyframe_transition", "keyframe_index"), &ProceduralAnimation::get_keyframe_transition);
 	ClassDB::bind_method(D_METHOD("set_keyframe_transition", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_transition);
+
+	ClassDB::bind_method(D_METHOD("get_keyframe_time", "keyframe_index"), &ProceduralAnimation::get_keyframe_time);
+	ClassDB::bind_method(D_METHOD("set_keyframe_time", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_time);
 
 	ClassDB::bind_method(D_METHOD("get_keyframe_node_position", "keyframe_index"), &ProceduralAnimation::get_keyframe_node_position);
 	ClassDB::bind_method(D_METHOD("set_keyframe_node_position", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_node_position);

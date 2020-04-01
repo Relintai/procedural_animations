@@ -124,7 +124,7 @@ protected:
 	void on_animation_keyframe_spinbox_value_changed(float value);
 	void on_time_spinbox_value_changed(float value);
 
-	void on_dragged(Vector2 from, Vector2 to);
+	void on_offset_changed();
 
 	void changed();
 

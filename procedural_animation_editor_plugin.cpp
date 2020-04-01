@@ -400,8 +400,10 @@ float ProceduralAnimationEditorGraphNode::get_time() const {
 	return _time;
 }
 void ProceduralAnimationEditorGraphNode::set_time(const float value) {
-	_time = value;
+	if (Math::is_equal_approx(value, _time))
+		return;
 
+	_time = value;
 	_time_spinbox->set_value(value);
 
 	if (!_animation.is_valid())
@@ -436,7 +438,7 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 
 	_animation_keyframe_index = 0;
 	_next_keyframe = -1;
-	_time = 1;
+	_time = 0;
 
 	set_title("Animation Frame");
 	set_show_close_button(true);
@@ -466,6 +468,7 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 	_time_spinbox = memnew(SpinBox);
 	_time_spinbox->set_max(999999999);
 	_time_spinbox->set_min(0);
+	_time_spinbox->set_step(0.01);
 	_time_spinbox->set_h_size_flags(SIZE_EXPAND_FILL);
 	_time_spinbox->connect("value_changed", this, "on_time_spinbox_value_changed");
 	add_child(_time_spinbox);
@@ -492,7 +495,7 @@ void ProceduralAnimationEditorGraphNode::on_time_spinbox_value_changed(float val
 	set_time(value);
 }
 
-void ProceduralAnimationEditorGraphNode::on_dragged(Vector2 from, Vector2 to) {
+void ProceduralAnimationEditorGraphNode::on_offset_changed() {
 	if (!_animation.is_valid())
 		return;
 
@@ -512,7 +515,7 @@ void ProceduralAnimationEditorGraphNode::on_transition_changed(const StringName 
 void ProceduralAnimationEditorGraphNode::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE:
-			connect("offset_changed", this, "changed");
+			connect("offset_changed", this, "on_offset_changed");
 			_transition_editor->connect("property_changed", this, "on_transition_changed");
 			break;
 	}
@@ -526,7 +529,7 @@ void ProceduralAnimationEditorGraphNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("on_animation_keyframe_spinbox_value_changed", "value"), &ProceduralAnimationEditorGraphNode::on_animation_keyframe_spinbox_value_changed);
 	ClassDB::bind_method(D_METHOD("on_time_spinbox_value_changed", "value"), &ProceduralAnimationEditorGraphNode::on_time_spinbox_value_changed);
 
-	ClassDB::bind_method(D_METHOD("on_dragged", "from", "to"), &ProceduralAnimationEditorGraphNode::on_dragged);
+	ClassDB::bind_method(D_METHOD("on_offset_changed"), &ProceduralAnimationEditorGraphNode::on_offset_changed);
 
 	ClassDB::bind_method(D_METHOD("on_transition_changed", "p_property", "p_value", "p_field", "p_changing"), &ProceduralAnimationEditorGraphNode::on_transition_changed);
 
