@@ -22,7 +22,12 @@ SOFTWARE.
 
 #include "procedural_animation_editor_plugin.h"
 
+#include "editor/editor_properties.h"
+
 #include "editor/editor_scale.h"
+
+#include "core/object.h"
+#include "scene/animation/animation_player.h"
 
 // S  --------        ProceduralAnimationEditor        --------
 
@@ -373,9 +378,10 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
 	l3->set_text("Easing");
 	add_child(l3);
 
-	_curve_editor = memnew(CurveEditor);
-	_curve_editor->set_custom_minimum_size(Size2(0, 69) * EDSCALE);
-	add_child(_curve_editor);
+	_transition_editor = memnew(EditorPropertyEasing);
+	_transition_editor->set_object_and_property(this, "transition");
+	_transition_editor->set_h_size_flags(SIZE_EXPAND_FILL);
+	add_child(_transition_editor);
 
 	set_slot(0, true, 0, Color(0, 1, 0), true, 0, Color(0, 1, 0));
 }
@@ -400,10 +406,15 @@ void ProceduralAnimationEditorGraphNode::changed() {
 	emit_signal("graphnode_changed", this);
 }
 
+void ProceduralAnimationEditorGraphNode::on_transition_changed(const StringName &p_property, const Variant &p_value, const StringName &p_field, bool p_changing) {
+	set_transition(p_value);
+}
+
 void ProceduralAnimationEditorGraphNode::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE:
 			connect("offset_changed", this, "changed");
+			_transition_editor->connect("property_changed", this, "on_transition_changed");
 			break;
 	}
 }
@@ -416,6 +427,12 @@ void ProceduralAnimationEditorGraphNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("on_animation_keyframe_spinbox_value_changed", "value"), &ProceduralAnimationEditorGraphNode::on_animation_keyframe_spinbox_value_changed);
 
 	ClassDB::bind_method(D_METHOD("on_dragged", "from", "to"), &ProceduralAnimationEditorGraphNode::on_dragged);
+
+	ClassDB::bind_method(D_METHOD("on_transition_changed", "p_property", "p_value", "p_field", "p_changing"), &ProceduralAnimationEditorGraphNode::on_transition_changed);
+
+	ClassDB::bind_method(D_METHOD("get_transition"), &ProceduralAnimationEditorGraphNode::get_transition);
+	ClassDB::bind_method(D_METHOD("set_transition", "value"), &ProceduralAnimationEditorGraphNode::set_transition);
+	ADD_PROPERTY(PropertyInfo(Variant::REAL, "transition", PROPERTY_HINT_EXP_EASING), "set_transition", "get_transition");
 }
 
 // E  --------        ProceduralAnimationEditorGraphNode        --------

@@ -32,7 +32,7 @@ SOFTWARE.
 #include "core/core_string_names.h"
 #include "procedural_animation.h"
 
-#include "editor/plugins/curve_editor_plugin.h"
+class EditorPropertyEasing;
 
 class ProceduralAnimationEditor : public VBoxContainer {
 	GDCLASS(ProceduralAnimationEditor, VBoxContainer);
@@ -112,6 +112,8 @@ protected:
 
 	void changed();
 
+	void on_transition_changed(const StringName &p_property, const Variant &p_value, const StringName &p_field, bool p_changing);
+
 	void _notification(int p_what);
 	static void _bind_methods();
 
@@ -122,7 +124,7 @@ private:
 
 	int _animation_keyframe_index;
 	int _next_keyframe;
-	CurveEditor *_curve_editor;
+	EditorPropertyEasing *_transition_editor;
 	float _transition;
 
 	Ref<ProceduralAnimation> _animation;
