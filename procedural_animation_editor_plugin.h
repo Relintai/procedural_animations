@@ -57,6 +57,9 @@ public:
 
 	void on_connection_request(const String &from, const int from_slot, const String &to, const int to_slot);
 	void on_disconnection_request(const String &from, const int from_slot, const String &to, const int to_slot);
+	void on_delete_nodes_request();
+
+	void _delete_request(const StringName &name);
 
 	ProceduralAnimationEditor();
 	ProceduralAnimationEditor(EditorNode *p_editor);
@@ -117,7 +120,7 @@ public:
 	Ref<ProceduralAnimation> get_animation();
 	void set_animation(const Ref<ProceduralAnimation> &animation);
 
-	ProceduralAnimationEditorGraphNode();
+	ProceduralAnimationEditorGraphNode(ProceduralAnimationEditor *editor);
 	~ProceduralAnimationEditorGraphNode();
 
 protected:
@@ -129,6 +132,8 @@ protected:
 	void changed();
 
 	void on_transition_changed(const StringName &p_property, const Variant &p_value, const StringName &p_field, bool p_changing);
+
+	void on_close_request();
 
 	void _notification(int p_what);
 	static void _bind_methods();
@@ -146,6 +151,8 @@ private:
 	float _time;
 
 	Ref<ProceduralAnimation> _animation;
+
+	ProceduralAnimationEditor *_editor;
 };
 
 class ProceduralAnimationEditorPlugin : public EditorPlugin {

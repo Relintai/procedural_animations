@@ -58,7 +58,7 @@ void ProceduralAnimationEditor::load_animation() {
 	for (int i = 0; i < kfind.size(); ++i) {
 		int id = kfind[i];
 
-		ProceduralAnimationEditorGraphNode *gn = memnew(ProceduralAnimationEditorGraphNode);
+		ProceduralAnimationEditorGraphNode *gn = memnew(ProceduralAnimationEditorGraphNode(this));
 		_graph_edit->add_child(gn);
 		gn->set_name(String::num(id));
 		gn->set_id(id);
@@ -172,10 +172,35 @@ void ProceduralAnimationEditor::on_disconnection_request(const String &from, con
 	_graph_edit->disconnect_node(from, from_slot, to, to_slot);
 }
 
+void ProceduralAnimationEditor::on_delete_nodes_request() {
+
+	List<StringName> to_erase;
+
+	for (int i = 0; i < _graph_edit->get_child_count(); i++) {
+		GraphNode *gn = Object::cast_to<GraphNode>(_graph_edit->get_child(i));
+		if (gn) {
+			if (gn->is_selected() && gn->is_close_button_visible()) {
+				to_erase.push_back(gn->get_name());
+			}
+		}
+	}
+
+	if (to_erase.empty())
+		return;
+
+	//undo_redo->create_action(TTR("Delete Node(s)"));
+
+	for (List<StringName>::Element *F = to_erase.front(); F; F = F->next()) {
+		_delete_request(F->get());
+	}
+
+	//undo_redo->commit_action();
+}
+
 void ProceduralAnimationEditor::add_frame_button_pressed() {
 	int id = _animation->add_keyframe();
 
-	ProceduralAnimationEditorGraphNode *gn = memnew(ProceduralAnimationEditorGraphNode);
+	ProceduralAnimationEditorGraphNode *gn = memnew(ProceduralAnimationEditorGraphNode(this));
 	_graph_edit->add_child(gn);
 	gn->set_name(String::num(id));
 	gn->set_id(id);
@@ -215,6 +240,47 @@ void ProceduralAnimationEditor::on_loop_checkbox_toggled(const bool value) {
 	_animation->set_loop(value);
 }
 
+void ProceduralAnimationEditor::_delete_request(const StringName &name) {
+	if (!_animation.is_valid())
+		return;
+
+	Node *n = _graph_edit->get_node_or_null(NodePath(name));
+
+	ProceduralAnimationEditorGraphNode *g = Object::cast_to<ProceduralAnimationEditorGraphNode>(n);
+
+	if (g == NULL)
+		return;
+
+	List<GraphEdit::Connection> conns;
+	_graph_edit->get_connection_list(&conns);
+
+	for (List<GraphEdit::Connection>::Element *E = conns.front(); E; E = E->next()) {
+		GraphEdit::Connection c = E->get();
+
+		if (c.to == name) {
+			if (c.from == "Start") {
+				_animation->set_start_frame_index(-1);
+			} else {
+				Node *fn = _graph_edit->get_node_or_null(NodePath(c.from));
+
+				ProceduralAnimationEditorGraphNode *fg = Object::cast_to<ProceduralAnimationEditorGraphNode>(fn);
+
+				if (fg != NULL) {
+					_animation->set_keyframe_next_keyframe_index(fg->get_id(), -1);
+				}
+			}
+
+			_graph_edit->disconnect_node(c.from, c.from_port, c.to, c.to_port);
+		} else if (c.from == name) {
+			_graph_edit->disconnect_node(c.from, c.from_port, c.to, c.to_port);
+		}
+	}
+
+	_animation->remove_keyframe(g->get_id());
+	g->set_name("r" + g->get_name());
+	g->queue_delete();
+}
+
 void ProceduralAnimationEditor::_notification(int p_what) {
 
 	switch (p_what) {
@@ -231,6 +297,7 @@ void ProceduralAnimationEditor::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("on_connection_request", "from", "from_slot", "to", "to_slot"), &ProceduralAnimationEditor::on_connection_request);
 	ClassDB::bind_method(D_METHOD("on_disconnection_request", "from", "from_slot", "to", "to_slot"), &ProceduralAnimationEditor::on_disconnection_request);
+	ClassDB::bind_method(D_METHOD("on_delete_nodes_request"), &ProceduralAnimationEditor::on_delete_nodes_request);
 
 	ClassDB::bind_method(D_METHOD("get_animation_target_animation"), &ProceduralAnimationEditor::get_animation_target_animation);
 	ClassDB::bind_method(D_METHOD("set_animation_target_animation", "animation"), &ProceduralAnimationEditor::set_animation_target_animation);
@@ -295,6 +362,8 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 	_graph_edit->set_custom_minimum_size(Size2(0, 200) * EDSCALE);
 	_graph_edit->connect("connection_request", this, "on_connection_request");
 	_graph_edit->connect("disconnection_request", this, "on_disconnection_request");
+	_graph_edit->connect("delete_nodes_request", this, "on_delete_nodes_request");
+
 	add_child(_graph_edit);
 
 	_start_node = memnew(GraphNode);
@@ -452,7 +521,9 @@ void ProceduralAnimationEditorGraphNode::set_animation(const Ref<ProceduralAnima
 	_animation = animation;
 }
 
-ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode() {
+ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode(ProceduralAnimationEditor *editor) {
+	_editor = editor;
+
 	_id = 0;
 
 	_animation_keyframe_index = 0;
@@ -533,11 +604,17 @@ void ProceduralAnimationEditorGraphNode::on_transition_changed(const StringName 
 	set_transition(p_value);
 }
 
+void ProceduralAnimationEditorGraphNode::on_close_request() {
+	_editor->_delete_request(get_name());
+}
+
 void ProceduralAnimationEditorGraphNode::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE:
 			connect("offset_changed", this, "on_offset_changed");
 			_transition_editor->connect("property_changed", this, "on_transition_changed");
+
+			connect("close_request", this, "on_close_request");
 			break;
 	}
 }
@@ -551,6 +628,8 @@ void ProceduralAnimationEditorGraphNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("on_time_spinbox_value_changed", "value"), &ProceduralAnimationEditorGraphNode::on_time_spinbox_value_changed);
 
 	ClassDB::bind_method(D_METHOD("on_offset_changed"), &ProceduralAnimationEditorGraphNode::on_offset_changed);
+
+	ClassDB::bind_method(D_METHOD("on_close_request"), &ProceduralAnimationEditorGraphNode::on_close_request);
 
 	ClassDB::bind_method(D_METHOD("on_transition_changed", "p_property", "p_value", "p_field", "p_changing"), &ProceduralAnimationEditorGraphNode::on_transition_changed);
 
