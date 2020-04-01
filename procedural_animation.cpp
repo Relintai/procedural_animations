@@ -251,6 +251,8 @@ void ProceduralAnimation::process_animation_data() {
 
 				if (key_index != -1)
 					key_value = _animation->track_get_key_value(i, key_index);
+			} else {
+				key_value = _animation->track_get_key_value(i, key_index);
 			}
 
 			if (key_value.get_type() == Variant::NIL)
