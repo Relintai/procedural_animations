@@ -92,7 +92,7 @@ void ProceduralAnimationEditor::clear_keyframe_nodes() {
 
 		ProceduralAnimationEditorGraphNode *gn = Object::cast_to<ProceduralAnimationEditorGraphNode>(n);
 
-		if (!ObjectDB::instance_validate(gn)) {
+		if (!gn) {
 			continue;
 		}
 
@@ -285,7 +285,11 @@ void ProceduralAnimationEditor::_notification(int p_what) {
 
 	switch (p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
+			#if VERSION_MAJOR < 4
 			_pin->set_icon(get_icon("Pin", "EditorIcons"));
+			#else
+			_pin->set_icon(get_theme_icon("Pin", "EditorIcons"));
+			#endif
 		} break;
 	}
 }
@@ -332,12 +336,24 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 	_animation_fps_spinbox = memnew(SpinBox);
 	_animation_fps_spinbox->set_max(999999999);
 	_animation_fps_spinbox->set_step(1);
+
+	#if VERSION_MAJOR < 4
 	_animation_fps_spinbox->connect("value_changed", this, "on_animation_fps_changed");
+	#else
+	_animation_fps_spinbox->connect("value_changed", callable_mp(this, &ProceduralAnimationEditor::on_animation_fps_changed));
+	#endif
+
 	hbc->add_child(_animation_fps_spinbox);
 
 	_loop_checkbox = memnew(CheckBox);
 	_loop_checkbox->set_text("Loop");
+	
+	#if VERSION_MAJOR < 4
 	_loop_checkbox->connect("toggled", this, "on_loop_checkbox_toggled");
+	#else
+	_loop_checkbox->connect("toggled", callable_mp(this, &ProceduralAnimationEditor::on_loop_checkbox_toggled));
+	#endif
+
 	hbc->add_child(_loop_checkbox);
 
 	Control *spacer = memnew(Control);
@@ -346,7 +362,13 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 
 	Button *aafb = memnew(Button);
 	aafb->set_text("add frame");
+
+	#if VERSION_MAJOR < 4
 	aafb->connect("pressed", this, "add_frame_button_pressed");
+	#else
+	aafb->connect("pressed", callable_mp(this, &ProceduralAnimationEditor::add_frame_button_pressed));
+	#endif
+
 	hbc->add_child(aafb);
 
 	_pin = memnew(ToolButton);
@@ -360,9 +382,16 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 	_graph_edit->set_h_size_flags(SIZE_EXPAND_FILL);
 	_graph_edit->set_v_size_flags(SIZE_EXPAND_FILL);
 	_graph_edit->set_custom_minimum_size(Size2(0, 200) * EDSCALE);
+
+	#if VERSION_MAJOR < 4
 	_graph_edit->connect("connection_request", this, "on_connection_request");
 	_graph_edit->connect("disconnection_request", this, "on_disconnection_request");
 	_graph_edit->connect("delete_nodes_request", this, "on_delete_nodes_request");
+	#else
+	_graph_edit->connect("connection_request", callable_mp(this, &ProceduralAnimationEditor::on_connection_request));
+	_graph_edit->connect("disconnection_request", callable_mp(this, &ProceduralAnimationEditor::on_disconnection_request));
+	_graph_edit->connect("delete_nodes_request", callable_mp(this, &ProceduralAnimationEditor::on_delete_nodes_request));
+	#endif
 
 	add_child(_graph_edit);
 
@@ -383,7 +412,13 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 
 	//delete confirm popup
 	_delete_popuop = memnew(ConfirmationDialog);
+
+	#if VERSION_MAJOR < 4
 	_delete_popuop->connect("confirmed", this, "on_delete_popup_confirmed");
+	#else
+	_delete_popuop->connect("confirmed", callable_mp(this, &ProceduralAnimationEditor::on_delete_popup_confirmed));
+	#endif
+
 	popups->add_child(_delete_popuop);
 
 	Label *dellabel = memnew(Label);
@@ -392,7 +427,7 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 
 	//name popup
 	_name_popuop = memnew(ConfirmationDialog);
-	_name_popuop->connect("confirmed", this, "on_name_popup_confirmed");
+	//_name_popuop->connect("confirmed", this, "on_name_popup_confirmed");
 	popups->add_child(_name_popuop);
 
 	VBoxContainer *name_popup_container = memnew(VBoxContainer);
@@ -539,7 +574,13 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode(Procedura
 	add_child(l1);
 
 	_name = memnew(LineEdit);
+	
+	#if VERSION_MAJOR < 4
 	_name->connect("text_entered", this, "on_keyframe_name_modified");
+	#else
+	_name->connect("text_entered", callable_mp(this, &ProceduralAnimationEditorGraphNode::on_keyframe_name_modified));
+	#endif
+
 	add_child(_name);
 
 	Label *l2 = memnew(Label);
@@ -549,7 +590,13 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode(Procedura
 	_animation_keyframe_spinbox = memnew(SpinBox);
 	_animation_keyframe_spinbox->set_max(999999999);
 	_animation_keyframe_spinbox->set_h_size_flags(SIZE_EXPAND_FILL);
+
+	#if VERSION_MAJOR < 4
 	_animation_keyframe_spinbox->connect("value_changed", this, "on_animation_keyframe_spinbox_value_changed");
+	#else
+	_animation_keyframe_spinbox->connect("value_changed", callable_mp(this, &ProceduralAnimationEditorGraphNode::on_animation_keyframe_spinbox_value_changed));
+	#endif
+
 	add_child(_animation_keyframe_spinbox);
 
 	Label *lt = memnew(Label);
@@ -562,7 +609,13 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode(Procedura
 	_time_spinbox->set_step(0.01);
 	_time_spinbox->set_value(1);
 	_time_spinbox->set_h_size_flags(SIZE_EXPAND_FILL);
+
+	#if VERSION_MAJOR < 4
 	_time_spinbox->connect("value_changed", this, "on_time_spinbox_value_changed");
+	#else
+	_time_spinbox->connect("value_changed", callable_mp(this, &ProceduralAnimationEditorGraphNode::on_time_spinbox_value_changed));
+	#endif
+
 	add_child(_time_spinbox);
 
 	_transition_editor = memnew(EditorPropertyEasing);
@@ -611,10 +664,15 @@ void ProceduralAnimationEditorGraphNode::on_close_request() {
 void ProceduralAnimationEditorGraphNode::_notification(int p_what) {
 	switch (p_what) {
 		case NOTIFICATION_ENTER_TREE:
+			#if VERSION_MAJOR < 4
 			connect("offset_changed", this, "on_offset_changed");
 			_transition_editor->connect("property_changed", this, "on_transition_changed");
-
 			connect("close_request", this, "on_close_request");
+			#else
+			connect("offset_changed", callable_mp(this, &ProceduralAnimationEditorGraphNode::on_offset_changed));
+			_transition_editor->connect("property_changed", callable_mp(this, &ProceduralAnimationEditorGraphNode::on_transition_changed));
+			connect("close_request", callable_mp(this, &ProceduralAnimationEditorGraphNode::on_close_request));
+			#endif
 			break;
 	}
 }

@@ -27,11 +27,20 @@ SOFTWARE.
 
 #include "core/map.h"
 #include "core/math/vector2.h"
-#include "core/pool_vector.h"
+
 #include "core/vector.h"
 
 #include "scene/resources/animation.h"
 #include "scene/resources/curve.h"
+
+#include "core/version.h"
+
+#if VERSION_MAJOR < 4
+#include "core/pool_vector.h"
+#else
+#define PoolVector Vector
+#define REAL FLOAT
+#endif
 
 class ProceduralAnimation : public Animation {
 	GDCLASS(ProceduralAnimation, Animation);
