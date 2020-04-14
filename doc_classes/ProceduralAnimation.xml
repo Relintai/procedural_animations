@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<class name="ProceduralAnimation" inherits="Resource" version="3.2">
+<class name="ProceduralAnimation" inherits="Animation" version="3.2">
 	<brief_description>
 	</brief_description>
 	<description>
@@ -7,22 +7,8 @@
 	<tutorials>
 	</tutorials>
 	<methods>
-		<method name="add_animation">
-			<return type="int">
-			</return>
-			<description>
-			</description>
-		</method>
 		<method name="add_keyframe">
 			<return type="int">
-			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<description>
-			</description>
-		</method>
-		<method name="get_animation_indices" qualifiers="const">
-			<return type="PoolIntArray">
 			</return>
 			<description>
 			</description>
@@ -41,46 +27,10 @@
 			<description>
 			</description>
 		</method>
-		<method name="get_animation_name" qualifiers="const">
-			<return type="String">
-			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<description>
-			</description>
-		</method>
-		<method name="get_animation_node_position" qualifiers="const">
-			<return type="Vector2">
-			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<description>
-			</description>
-		</method>
-		<method name="get_animation_start_frame_index" qualifiers="const">
-			<return type="int">
-			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<description>
-			</description>
-		</method>
 		<method name="get_keyframe_animation_keyframe_index" qualifiers="const">
 			<return type="int">
 			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<argument index="1" name="keyframe_index" type="int">
-			</argument>
-			<description>
-			</description>
-		</method>
-		<method name="get_keyframe_in_curve" qualifiers="const">
-			<return type="Curve">
-			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<argument index="1" name="keyframe_index" type="int">
+			<argument index="0" name="keyframe_index" type="int">
 			</argument>
 			<description>
 			</description>
@@ -88,17 +38,13 @@
 		<method name="get_keyframe_indices" qualifiers="const">
 			<return type="PoolIntArray">
 			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
 			<description>
 			</description>
 		</method>
 		<method name="get_keyframe_name" qualifiers="const">
 			<return type="String">
 			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<argument index="1" name="keyframe_index" type="int">
+			<argument index="0" name="keyframe_index" type="int">
 			</argument>
 			<description>
 			</description>
@@ -106,9 +52,7 @@
 		<method name="get_keyframe_next_keyframe_index" qualifiers="const">
 			<return type="int">
 			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<argument index="1" name="keyframe_index" type="int">
+			<argument index="0" name="keyframe_index" type="int">
 			</argument>
 			<description>
 			</description>
@@ -116,50 +60,50 @@
 		<method name="get_keyframe_node_position" qualifiers="const">
 			<return type="Vector2">
 			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<argument index="1" name="keyframe_index" type="int">
+			<argument index="0" name="keyframe_index" type="int">
 			</argument>
 			<description>
 			</description>
 		</method>
-		<method name="has_animation" qualifiers="const">
-			<return type="bool">
-			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<description>
-			</description>
-		</method>
-		<method name="has_keyframe" qualifiers="const">
-			<return type="bool">
-			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<argument index="1" name="keyframe_index" type="int">
-			</argument>
-			<description>
-			</description>
-		</method>
-		<method name="initialize">
-			<return type="void">
-			</return>
-			<description>
-			</description>
-		</method>
-		<method name="load_keyframe_data">
-			<return type="void">
+		<method name="get_keyframe_time" qualifiers="const">
+			<return type="float">
 			</return>
 			<argument index="0" name="keyframe_index" type="int">
 			</argument>
 			<description>
 			</description>
 		</method>
-		<method name="remove_animation">
+		<method name="get_keyframe_transition" qualifiers="const">
+			<return type="float">
+			</return>
+			<argument index="0" name="keyframe_index" type="int">
+			</argument>
+			<description>
+			</description>
+		</method>
+		<method name="get_start_frame_index" qualifiers="const">
+			<return type="int">
+			</return>
+			<description>
+			</description>
+		</method>
+		<method name="get_start_node_position" qualifiers="const">
+			<return type="Vector2">
+			</return>
+			<description>
+			</description>
+		</method>
+		<method name="has_keyframe" qualifiers="const">
+			<return type="bool">
+			</return>
+			<argument index="0" name="keyframe_index" type="int">
+			</argument>
+			<description>
+			</description>
+		</method>
+		<method name="process_animation_data">
 			<return type="void">
 			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
 			<description>
 			</description>
 		</method>
@@ -174,9 +118,7 @@
 		<method name="remove_keyframe">
 			<return type="void">
 			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<argument index="1" name="keyframe_index" type="int">
+			<argument index="0" name="keyframe_index" type="int">
 			</argument>
 			<description>
 			</description>
@@ -191,56 +133,12 @@
 			<description>
 			</description>
 		</method>
-		<method name="set_animation_name">
-			<return type="void">
-			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<argument index="1" name="value" type="String">
-			</argument>
-			<description>
-			</description>
-		</method>
-		<method name="set_animation_node_position">
-			<return type="void">
-			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<argument index="1" name="value" type="Vector2">
-			</argument>
-			<description>
-			</description>
-		</method>
-		<method name="set_animation_start_frame_index">
-			<return type="void">
-			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<argument index="1" name="value" type="int">
-			</argument>
-			<description>
-			</description>
-		</method>
 		<method name="set_keyframe_animation_keyframe_index">
 			<return type="void">
 			</return>
-			<argument index="0" name="animation_index" type="int">
+			<argument index="0" name="keyframe_index" type="int">
 			</argument>
-			<argument index="1" name="keyframe_index" type="int">
-			</argument>
-			<argument index="2" name="value" type="int">
-			</argument>
-			<description>
-			</description>
-		</method>
-		<method name="set_keyframe_in_curve">
-			<return type="void">
-			</return>
-			<argument index="0" name="animation_index" type="int">
-			</argument>
-			<argument index="1" name="keyframe_index" type="int">
-			</argument>
-			<argument index="2" name="value" type="Curve">
+			<argument index="1" name="value" type="int">
 			</argument>
 			<description>
 			</description>
@@ -248,11 +146,9 @@
 		<method name="set_keyframe_name">
 			<return type="void">
 			</return>
-			<argument index="0" name="animation_index" type="int">
+			<argument index="0" name="keyframe_index" type="int">
 			</argument>
-			<argument index="1" name="keyframe_index" type="int">
-			</argument>
-			<argument index="2" name="value" type="String">
+			<argument index="1" name="value" type="String">
 			</argument>
 			<description>
 			</description>
@@ -260,11 +156,9 @@
 		<method name="set_keyframe_next_keyframe_index">
 			<return type="void">
 			</return>
-			<argument index="0" name="animation_index" type="int">
+			<argument index="0" name="keyframe_index" type="int">
 			</argument>
-			<argument index="1" name="keyframe_index" type="int">
-			</argument>
-			<argument index="2" name="value" type="int">
+			<argument index="1" name="value" type="int">
 			</argument>
 			<description>
 			</description>
@@ -272,11 +166,45 @@
 		<method name="set_keyframe_node_position">
 			<return type="void">
 			</return>
-			<argument index="0" name="animation_index" type="int">
+			<argument index="0" name="keyframe_index" type="int">
 			</argument>
-			<argument index="1" name="keyframe_index" type="int">
+			<argument index="1" name="value" type="Vector2">
 			</argument>
-			<argument index="2" name="value" type="Vector2">
+			<description>
+			</description>
+		</method>
+		<method name="set_keyframe_time">
+			<return type="void">
+			</return>
+			<argument index="0" name="keyframe_index" type="int">
+			</argument>
+			<argument index="1" name="value" type="float">
+			</argument>
+			<description>
+			</description>
+		</method>
+		<method name="set_keyframe_transition">
+			<return type="void">
+			</return>
+			<argument index="0" name="keyframe_index" type="int">
+			</argument>
+			<argument index="1" name="value" type="float">
+			</argument>
+			<description>
+			</description>
+		</method>
+		<method name="set_start_frame_index">
+			<return type="void">
+			</return>
+			<argument index="0" name="value" type="int">
+			</argument>
+			<description>
+			</description>
+		</method>
+		<method name="set_start_node_position">
+			<return type="void">
+			</return>
+			<argument index="0" name="value" type="Vector2">
 			</argument>
 			<description>
 			</description>
