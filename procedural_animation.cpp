@@ -244,7 +244,8 @@ void ProceduralAnimation::process_animation_data() {
 	}
 
 	float target_keyframe_time = 0;
-	float key_step = _animation->get_length() / static_cast<float>(_animation_fps);
+	float key_step = 1.0 / static_cast<float>(_animation_fps);
+
 	int next_animation_key = _start_frame_index;
 	Vector<int> _used_keys;
 	while (next_animation_key != -1) {
@@ -256,7 +257,7 @@ void ProceduralAnimation::process_animation_data() {
 
 		int animation_keyframe_index = frame->animation_keyframe_index;
 
-		float time = animation_keyframe_index * key_step;
+		float time = static_cast<float>(animation_keyframe_index) * key_step;
 
 		bool found_keyframe = false;
 		for (int i = 0; i < _animation->get_track_count(); ++i) {
