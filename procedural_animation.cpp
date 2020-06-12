@@ -27,6 +27,8 @@ Ref<Animation> ProceduralAnimation::get_animation() const {
 }
 void ProceduralAnimation::set_animation(const Ref<Animation> &value) {
 	_animation = value;
+
+	emit_changed();
 }
 
 int ProceduralAnimation::get_animation_fps() const {
@@ -34,6 +36,8 @@ int ProceduralAnimation::get_animation_fps() const {
 }
 void ProceduralAnimation::set_animation_fps(const int index) {
 	_animation_fps = index;
+
+	emit_changed();
 }
 
 String ProceduralAnimation::get_animation_keyframe_name(int keyframe_index) const {
@@ -45,6 +49,8 @@ String ProceduralAnimation::get_animation_keyframe_name(int keyframe_index) cons
 }
 void ProceduralAnimation::set_animation_keyframe_name(int keyframe_index, const String &value) {
 	_keyframe_names[keyframe_index] = value;
+
+	emit_changed();
 }
 void ProceduralAnimation::remove_animation_keyframe_name(int keyframe_index) {
 	if (!_keyframe_names.has(keyframe_index)) {
@@ -52,6 +58,8 @@ void ProceduralAnimation::remove_animation_keyframe_name(int keyframe_index) {
 	}
 
 	_keyframe_names.erase(keyframe_index);
+
+	emit_changed();
 }
 PoolVector<String> ProceduralAnimation::get_animation_keyframe_names() const {
 	PoolVector<String> names;
@@ -72,6 +80,8 @@ Vector2 ProceduralAnimation::get_start_node_position() const {
 }
 void ProceduralAnimation::set_start_node_position(const Vector2 &value) {
 	_start_node_position = value;
+
+	emit_changed();
 }
 
 int ProceduralAnimation::get_start_frame_index() const {
@@ -81,6 +91,8 @@ void ProceduralAnimation::set_start_frame_index(const int value) {
 	_start_frame_index = value;
 
 	process_animation_data();
+
+	emit_changed();
 }
 
 //Keyframes
@@ -123,6 +135,8 @@ void ProceduralAnimation::remove_keyframe(const int keyframe_index) {
 	memdelete(entry);
 
 	process_animation_data();
+
+	emit_changed();
 }
 
 bool ProceduralAnimation::has_keyframe(const int keyframe_index) const {
@@ -138,6 +152,8 @@ void ProceduralAnimation::set_keyframe_name(const int keyframe_index, const Stri
 	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
 
 	_keyframes[keyframe_index]->name = value;
+
+	emit_changed();
 }
 
 int ProceduralAnimation::get_keyframe_animation_keyframe_index(const int keyframe_index) const {
@@ -151,6 +167,8 @@ void ProceduralAnimation::set_keyframe_animation_keyframe_index(const int keyfra
 	_keyframes[keyframe_index]->animation_keyframe_index = value;
 
 	process_animation_data();
+
+	emit_changed();
 }
 
 int ProceduralAnimation::get_keyframe_next_keyframe_index(const int keyframe_index) const {
@@ -164,6 +182,8 @@ void ProceduralAnimation::set_keyframe_next_keyframe_index(const int keyframe_in
 	_keyframes[keyframe_index]->next_keyframe = value;
 
 	process_animation_data();
+
+	emit_changed();
 }
 
 float ProceduralAnimation::get_keyframe_transition(const int keyframe_index) const {
@@ -177,6 +197,8 @@ void ProceduralAnimation::set_keyframe_transition(const int keyframe_index, cons
 	_keyframes[keyframe_index]->transition = value;
 
 	process_animation_data();
+
+	emit_changed();
 }
 
 float ProceduralAnimation::get_keyframe_time(const int keyframe_index) const {
@@ -190,6 +212,8 @@ void ProceduralAnimation::set_keyframe_time(const int keyframe_index, const floa
 	_keyframes[keyframe_index]->time = value;
 
 	process_animation_data();
+
+	emit_changed();
 }
 
 Vector2 ProceduralAnimation::get_keyframe_node_position(const int keyframe_index) const {
@@ -201,6 +225,8 @@ void ProceduralAnimation::set_keyframe_node_position(const int keyframe_index, c
 	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
 
 	_keyframes[keyframe_index]->position = value;
+
+	emit_changed();
 }
 
 void ProceduralAnimation::process_animation_data() {
