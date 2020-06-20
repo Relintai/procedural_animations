@@ -32,6 +32,12 @@ SOFTWARE.
 #include "core/core_string_names.h"
 #include "procedural_animation.h"
 
+#include "core/version.h"
+
+#if VERSION_MAJOR >= 4
+#define ToolButton Button
+#endif
+
 class EditorPropertyEasing;
 class EditorPropertyResource;
 
