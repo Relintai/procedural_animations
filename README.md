@@ -2,15 +2,16 @@
 
 This is a c++ engine module for the Godot engine.
 
+It lets you compose new animations from other animation frames, and it alo sets up interpolations between them.
+
+It comes with it's own editor plugin.
+
 ![Broken Seals](screenshots/screenshot.png)
 
 It was inspired by this talk:
 https://www.youtube.com/watch?v=LNidsMesxSE
 
-It does not do everything from the talk, it only lets you compose new animations 
-from other animation frames, and it alo sets up interpolations between them.
-
-It comes with it's own editor plugin.
+It does not do everything from the talk!
 
 It supports both godot 3.2 and 4.0 (master). Note that since 4.0 is still in very early stages I only 
 check whether it works from time to time.
