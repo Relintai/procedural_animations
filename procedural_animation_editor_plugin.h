@@ -24,7 +24,6 @@ SOFTWARE.
 #define PROCEDURAL_ANIMATION_EDITOR_PLUGIN_H
 
 #include "editor/editor_plugin.h"
-#include "editor/pane_drag.h"
 
 #include "scene/gui/graph_edit.h"
 #include "scene/gui/menu_button.h"
