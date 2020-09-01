@@ -52,6 +52,7 @@ protected:
 		int next_keyframe;
 		float transition;
 		float time;
+		String method_name;
 		Vector2 position;
 
 		AnimationKeyFrame() {
@@ -103,6 +104,9 @@ public:
 
 	float get_keyframe_time(const int keyframe_index) const;
 	void set_keyframe_time(const int keyframe_index, const float value);
+
+	String get_method_name(const int keyframe_index) const;
+	void set_method_name(const int keyframe_index, const String &value);
 
 	Vector2 get_keyframe_node_position(const int keyframe_index) const;
 	void set_keyframe_node_position(const int keyframe_index, const Vector2 &value);

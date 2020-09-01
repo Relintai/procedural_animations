@@ -537,6 +537,23 @@ void ProceduralAnimationEditorGraphNode::set_time(const float value) {
 	changed();
 }
 
+String ProceduralAnimationEditorGraphNode::get_method_name() const {
+	return _method->get_text();
+}
+void ProceduralAnimationEditorGraphNode::set_method_name(const String &value) {
+	_method->set_text(value);
+
+	if (!_animation.is_valid())
+		return;
+
+	_animation->set_method_name(_id, value);
+
+	changed();
+}
+void ProceduralAnimationEditorGraphNode::on_method_name_modified(const String &value) {
+	set_method_name(value);
+}
+
 Ref<ProceduralAnimation> ProceduralAnimationEditorGraphNode::get_animation() {
 	return _animation;
 }
@@ -552,6 +569,7 @@ void ProceduralAnimationEditorGraphNode::set_animation(const Ref<ProceduralAnima
 	set_transition(animation->get_keyframe_transition(_id));
 	set_animation_keyframe_index(animation->get_keyframe_animation_keyframe_index(_id));
 	set_time(animation->get_keyframe_time(_id));
+	set_method_name(animation->get_method_name(_id));
 
 	_animation = animation;
 }
@@ -574,13 +592,11 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode(Procedura
 	add_child(l1);
 
 	_name = memnew(LineEdit);
-
 #if VERSION_MAJOR < 4
 	_name->connect("text_entered", this, "on_keyframe_name_modified");
 #else
 	_name->connect("text_entered", callable_mp(this, &ProceduralAnimationEditorGraphNode::on_keyframe_name_modified));
 #endif
-
 	add_child(_name);
 
 	Label *l2 = memnew(Label);
@@ -625,6 +641,18 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode(Procedura
 	_transition_editor->set_object_and_property(this, "transition");
 	_transition_editor->set_h_size_flags(SIZE_EXPAND_FILL);
 	add_child(_transition_editor);
+
+	Label *lm = memnew(Label);
+	lm->set_text("Method");
+	add_child(lm);
+
+	_method = memnew(LineEdit);
+#if VERSION_MAJOR < 4
+	_method->connect("text_entered", this, "on_method_name_modified");
+#else
+	_method->connect("text_entered", callable_mp(this, &ProceduralAnimationEditorGraphNode::on_method_name_modified));
+#endif
+	add_child(_method);
 
 	set_slot(0, true, 0, Color(0, 1, 0), true, 0, Color(0, 1, 0));
 }
@@ -694,6 +722,8 @@ void ProceduralAnimationEditorGraphNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_transition"), &ProceduralAnimationEditorGraphNode::get_transition);
 	ClassDB::bind_method(D_METHOD("set_transition", "value"), &ProceduralAnimationEditorGraphNode::set_transition);
 	ADD_PROPERTY(PropertyInfo(Variant::REAL, "transition", PROPERTY_HINT_EXP_EASING), "set_transition", "get_transition");
+
+	ClassDB::bind_method(D_METHOD("on_method_name_modified", "name"), &ProceduralAnimationEditorGraphNode::on_method_name_modified);
 }
 
 // E  --------        ProceduralAnimationEditorGraphNode        --------

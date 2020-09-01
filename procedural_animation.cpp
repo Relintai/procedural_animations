@@ -216,6 +216,19 @@ void ProceduralAnimation::set_keyframe_time(const int keyframe_index, const floa
 	emit_changed();
 }
 
+String ProceduralAnimation::get_method_name(int keyframe_index) const {
+	ERR_FAIL_COND_V(!_keyframes.has(keyframe_index), "");
+
+	return _keyframes[keyframe_index]->method_name;
+}
+void ProceduralAnimation::set_method_name(int keyframe_index, const String &value) {
+	ERR_FAIL_COND(!_keyframes.has(keyframe_index));
+
+	_keyframes[keyframe_index]->method_name = value;
+
+	emit_changed();
+}
+
 Vector2 ProceduralAnimation::get_keyframe_node_position(const int keyframe_index) const {
 	ERR_FAIL_COND_V(!_keyframes.has(keyframe_index), Vector2());
 
@@ -269,6 +282,8 @@ void ProceduralAnimation::process_animation_data() {
 		}
 	}
 
+	int custom_call_method_track = -1;
+
 	float target_keyframe_time = 0;
 	float key_step = 1.0 / static_cast<float>(_animation_fps);
 
@@ -305,6 +320,21 @@ void ProceduralAnimation::process_animation_data() {
 			track_insert_key(i, target_keyframe_time, key_value, frame->transition);
 
 			found_keyframe = true;
+		}
+
+		if (frame->method_name != "") {
+			if (custom_call_method_track == -1) {
+				custom_call_method_track = add_track(Animation::TYPE_METHOD);
+
+				track_set_path(custom_call_method_track, NodePath("."));
+				track_set_enabled(custom_call_method_track, true);
+			}
+
+			Dictionary d;
+			d["method"] = frame->method_name;
+			d["args"] = Array();
+
+			track_insert_key(custom_call_method_track, target_keyframe_time, d);
 		}
 
 		if (!found_keyframe)
@@ -375,6 +405,10 @@ bool ProceduralAnimation::_set(const StringName &p_name, const Variant &p_value)
 			keyframe->time = p_value;
 
 			return true;
+		} else if (keyframe_name == "method_name") {
+			keyframe->method_name = p_value;
+
+			return true;
 		} else if (keyframe_name == "position") {
 			keyframe->position = p_value;
 
@@ -426,6 +460,10 @@ bool ProceduralAnimation::_get(const StringName &p_name, Variant &r_ret) const {
 			r_ret = keyframe->time;
 
 			return true;
+		} else if (keyframe_prop_name == "method_name") {
+			r_ret = keyframe->method_name;
+
+			return true;
 		} else if (keyframe_prop_name == "position") {
 			r_ret = keyframe->position;
 
@@ -453,6 +491,7 @@ void ProceduralAnimation::_get_property_list(List<PropertyInfo> *p_list) const {
 		p_list->push_back(PropertyInfo(Variant::INT, "keyframe/" + itos(K->key()) + "/next_keyframe", PROPERTY_HINT_NONE, "", property_usange));
 		p_list->push_back(PropertyInfo(Variant::REAL, "keyframe/" + itos(K->key()) + "/transition", PROPERTY_HINT_EXP_EASING, "", property_usange));
 		p_list->push_back(PropertyInfo(Variant::REAL, "keyframe/" + itos(K->key()) + "/time", PROPERTY_HINT_NONE, "", property_usange));
+		p_list->push_back(PropertyInfo(Variant::STRING, "keyframe/" + itos(K->key()) + "/method_name", PROPERTY_HINT_NONE, "", property_usange));
 		p_list->push_back(PropertyInfo(Variant::VECTOR2, "keyframe/" + itos(K->key()) + "/position", PROPERTY_HINT_NONE, "", property_usange));
 	}
 }
@@ -497,6 +536,9 @@ void ProceduralAnimation::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("get_keyframe_time", "keyframe_index"), &ProceduralAnimation::get_keyframe_time);
 	ClassDB::bind_method(D_METHOD("set_keyframe_time", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_time);
+
+	ClassDB::bind_method(D_METHOD("get_method_name", "keyframe_index"), &ProceduralAnimation::get_method_name);
+	ClassDB::bind_method(D_METHOD("set_method_name", "keyframe_index", "value"), &ProceduralAnimation::set_method_name);
 
 	ClassDB::bind_method(D_METHOD("get_keyframe_node_position", "keyframe_index"), &ProceduralAnimation::get_keyframe_node_position);
 	ClassDB::bind_method(D_METHOD("set_keyframe_node_position", "keyframe_index", "value"), &ProceduralAnimation::set_keyframe_node_position);

@@ -122,6 +122,10 @@ public:
 	float get_time() const;
 	void set_time(const float value);
 
+	String get_method_name() const;
+	void set_method_name(const String &value);
+	void on_method_name_modified(const String &value);
+
 	Ref<ProceduralAnimation> get_animation();
 	void set_animation(const Ref<ProceduralAnimation> &animation);
 
@@ -154,6 +158,8 @@ private:
 	EditorPropertyEasing *_transition_editor;
 	float _transition;
 	float _time;
+
+	LineEdit *_method;
 
 	Ref<ProceduralAnimation> _animation;
 
