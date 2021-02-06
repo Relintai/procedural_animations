@@ -23,13 +23,18 @@ SOFTWARE.
 #ifndef PROCEDURAL_ANIMATION_H
 #define PROCEDURAL_ANIMATION_H
 
-#include "scene/resources/animation.h"
+#include "core/version.h"
 
-#include "core/map.h"
-#include "core/math/vector2.h"
-
+#if VERSION_MAJOR > 3
+#include "core/templates/vector.h"
+#include "core/templates/map.h"
+#else
 #include "core/vector.h"
+#include "core/map.h"
+#endif
 
+#include "scene/resources/animation.h"
+#include "core/math/vector2.h"
 #include "scene/resources/animation.h"
 #include "scene/resources/curve.h"
 

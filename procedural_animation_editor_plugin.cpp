@@ -22,11 +22,18 @@ SOFTWARE.
 
 #include "procedural_animation_editor_plugin.h"
 
+#include "core/version.h"
+
+#if VERSION_MAJOR > 3
+#include "core/object/object.h"
+#else
+#include "core/object.h"
+#endif
+
 #include "editor/editor_properties.h"
 
 #include "editor/editor_scale.h"
 
-#include "core/object.h"
 #include "scene/animation/animation_player.h"
 
 // S  --------        ProceduralAnimationEditor        --------
@@ -49,7 +56,11 @@ void ProceduralAnimationEditor::load_animation() {
 
 	ERR_FAIL_COND(!_animation.is_valid());
 
+#if VERSION_MAJOR > 3
+	_start_node->set_position_offset(_animation->get_start_node_position());
+#else
 	_start_node->set_offset(_animation->get_start_node_position());
+#endif
 
 	const PoolVector<String> &animation_names = _animation->get_animation_keyframe_names();
 
@@ -173,7 +184,6 @@ void ProceduralAnimationEditor::on_disconnection_request(const String &from, con
 }
 
 void ProceduralAnimationEditor::on_delete_nodes_request() {
-
 	List<StringName> to_erase;
 
 	for (int i = 0; i < _graph_edit->get_child_count(); i++) {
@@ -185,8 +195,13 @@ void ProceduralAnimationEditor::on_delete_nodes_request() {
 		}
 	}
 
+#if VERSION_MAJOR > 3
+	if (to_erase.is_empty())
+		return;
+#else
 	if (to_erase.empty())
 		return;
+#endif
 
 	//undo_redo->create_action(TTR("Delete Node(s)"));
 
@@ -282,7 +297,6 @@ void ProceduralAnimationEditor::_delete_request(const StringName &name) {
 }
 
 void ProceduralAnimationEditor::_notification(int p_what) {
-
 	switch (p_what) {
 		case NOTIFICATION_THEME_CHANGED: {
 #if VERSION_MAJOR < 4
@@ -322,8 +336,13 @@ ProceduralAnimationEditor::ProceduralAnimationEditor(EditorNode *p_editor) {
 	add_child(hbc);
 
 	_animation_target_animation_property = memnew(EditorPropertyResource);
+
+#if VERSION_MAJOR > 3
+#else
 	_animation_target_animation_property->set_margin(MARGIN_TOP, 5 * EDSCALE);
 	_animation_target_animation_property->set_margin(MARGIN_BOTTOM, 5 * EDSCALE);
+#endif
+
 	_animation_target_animation_property->set_custom_minimum_size(Size2(300 * EDSCALE, 0));
 	_animation_target_animation_property->set_label("Animation");
 	_animation_target_animation_property->set_object_and_property(this, "animation_target_animation");
@@ -563,7 +582,12 @@ void ProceduralAnimationEditorGraphNode::set_animation(const Ref<ProceduralAnima
 	if (!animation.is_valid())
 		return;
 
+#if VERSION_MAJOR > 3
+	set_position_offset(animation->get_keyframe_node_position(_id));
+#else
 	set_offset(animation->get_keyframe_node_position(_id));
+#endif
+
 	set_keyframe_name(animation->get_keyframe_name(_id));
 	set_next_keyframe(animation->get_keyframe_next_keyframe_index(_id));
 	set_transition(animation->get_keyframe_transition(_id));
@@ -635,8 +659,13 @@ ProceduralAnimationEditorGraphNode::ProceduralAnimationEditorGraphNode(Procedura
 	add_child(_time_spinbox);
 
 	_transition_editor = memnew(EditorPropertyEasing);
+
+#if VERSION_MAJOR > 3
+#else
 	_transition_editor->set_margin(MARGIN_TOP, 5 * EDSCALE);
 	_transition_editor->set_margin(MARGIN_BOTTOM, 5 * EDSCALE);
+#endif
+
 	_transition_editor->set_label("Easing");
 	_transition_editor->set_object_and_property(this, "transition");
 	_transition_editor->set_h_size_flags(SIZE_EXPAND_FILL);
@@ -672,7 +701,11 @@ void ProceduralAnimationEditorGraphNode::on_offset_changed() {
 	if (!_animation.is_valid())
 		return;
 
+#if VERSION_MAJOR > 3
+	_animation->set_keyframe_node_position(_id, get_position_offset());
+#else
 	_animation->set_keyframe_node_position(_id, get_offset());
+#endif
 
 	changed();
 }
@@ -773,7 +806,6 @@ void ProceduralAnimationEditorPlugin::make_visible(bool p_visible) {
 }
 
 ProceduralAnimationEditorPlugin::ProceduralAnimationEditorPlugin(EditorNode *p_node) {
-
 	editor = p_node;
 
 	animation_editor = memnew(ProceduralAnimationEditor(editor));

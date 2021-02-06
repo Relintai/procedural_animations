@@ -11,7 +11,7 @@ It comes with it's own editor plugin.
 It was inspired by this talk: https://www.youtube.com/watch?v=LNidsMesxSE \
 It does not do everything!
 
-It supports both godot 3.2 and 4.0 (master). Note that since 4.0 is still in very early stages I only 
+It supports both godot 3.2 and 4.0 (master [last tested commit](https://github.com/godotengine/godot/commit/b7e10141197fdd9b0dbc4cfa7890329510d36540)). Note that since 4.0 is still in very early stages I only 
 check whether it works from time to time.
 
 # Pre-built binaries
